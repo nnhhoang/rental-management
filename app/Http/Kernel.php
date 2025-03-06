@@ -3,10 +3,8 @@
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
-use App\Http\Middleware\CheckApartmentOwnership;
-use App\Http\Middleware\CheckRoomOwnership;
-use App\Http\Middleware\CheckContractOwnership;
-use App\Http\Middleware\CheckFeeOwnership;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Configuration\Exceptions;
 
 class Kernel extends HttpKernel
 {
@@ -21,7 +19,7 @@ class Kernel extends HttpKernel
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
@@ -65,12 +63,30 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
-        'signed' => \App\Http\Middleware\ValidateSignature::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        
+        // Custom middleware
         'check.apartment.ownership' => \App\Http\Middleware\CheckApartmentOwnership::class,
         'check.room.ownership' => \App\Http\Middleware\CheckRoomOwnership::class,
         'check.contract.ownership' => \App\Http\Middleware\CheckContractOwnership::class,
         'check.fee.ownership' => \App\Http\Middleware\CheckFeeOwnership::class,
     ];
+
+    /**
+     * Configure the middleware for the application.
+     */
+    public function middleware(Middleware $middleware): Middleware
+    {
+        return $middleware;
+    }
+
+    /**
+     * Configure the exceptions for the application.
+     */
+    public function exceptions(Exceptions $exceptions): Exceptions
+    {
+        return $exceptions;
+    }
 }
