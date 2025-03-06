@@ -17,7 +17,6 @@ class UtilityController extends Controller
     public function __construct(UtilityService $utilityService)
     {
         $this->utilityService = $utilityService;
-        $this->middleware('auth:sanctum');
     }
 
     public function getLatestElectricity($roomId)

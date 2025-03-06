@@ -21,8 +21,6 @@ class ContractController extends Controller
     ) {
         $this->contractService = $contractService;
         $this->tenantService = $tenantService;
-        $this->middleware('auth:sanctum');
-        $this->middleware('check.contract.ownership')->only(['show', 'update', 'terminate', 'destroy']);
     }
 
     public function index()

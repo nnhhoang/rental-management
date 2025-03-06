@@ -16,7 +16,6 @@ class TenantController extends Controller
     public function __construct(TenantService $tenantService)
     {
         $this->tenantService = $tenantService;
-        $this->middleware('auth:sanctum');
     }
 
     public function index(Request $request)

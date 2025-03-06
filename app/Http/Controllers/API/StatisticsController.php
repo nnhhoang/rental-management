@@ -14,7 +14,6 @@ class StatisticsController extends Controller
     public function __construct(StatisticsService $statisticsService)
     {
         $this->statisticsService = $statisticsService;
-        $this->middleware('auth:sanctum');
     }
 
     public function unpaidRooms()

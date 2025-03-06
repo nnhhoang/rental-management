@@ -9,6 +9,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -31,20 +32,18 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $user = $this->authService->login($request->validated());
+        $result = $this->authService->login($request->validated());
 
-        if (!$user) {
+        if (!$result['success']) {
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
             'message' => 'Login successful',
-            'user' => new UserResource($user),
-            'token' => $token
+            'user' => new UserResource($result['user']),
+            'token' => $result['token']
         ]);
     }
 
@@ -79,6 +78,6 @@ class AuthController extends Controller
 
     public function user()
     {
-        return new UserResource(auth()->user());
+        return new UserResource(Auth::user());
     }
 }

@@ -16,8 +16,6 @@ class FeeCollectionController extends Controller
     public function __construct(FeeCollectionService $feeCollectionService)
     {
         $this->feeCollectionService = $feeCollectionService;
-        $this->middleware('auth:sanctum');
-        $this->middleware('check.fee.ownership')->only(['show', 'update', 'recordPayment', 'destroy']);
     }
 
     public function index()

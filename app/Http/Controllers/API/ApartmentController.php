@@ -16,8 +16,6 @@ class ApartmentController extends Controller
     public function __construct(ApartmentService $apartmentService)
     {
         $this->apartmentService = $apartmentService;
-        $this->middleware('auth:sanctum');
-        $this->middleware('check.apartment.ownership')->only(['show', 'update', 'destroy']);
     }
 
     public function index(Request $request)

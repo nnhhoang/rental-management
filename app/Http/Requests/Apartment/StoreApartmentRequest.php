@@ -22,19 +22,12 @@ class StoreApartmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'apartment_room_id' => 'required|exists:apartment_rooms,id',
-            'tenant_id' => 'required|exists:tenants,id',
-            'pay_period' => 'required|integer|in:1,3,6,12',
-            'price' => 'required|numeric|min:0',
-            'electricity_pay_type' => 'required|integer|in:1,2,3',
-            'electricity_price' => 'required|numeric|min:0',
-            'electricity_number_start' => 'required|integer|min:0',
-            'water_pay_type' => 'required|integer|in:1,2,3',
-            'water_price' => 'required|numeric|min:0',
-            'water_number_start' => 'required|integer|min:0',
-            'number_of_tenant_current' => 'required|integer|min:1',
-            'note' => 'nullable|string',
-            'start_date' => 'required|date',
+            'name' => 'required|string|max:45',
+            'address' => 'required|string|max:256',
+            'province_id' => 'nullable|string|max:256',
+            'district_id' => 'nullable|string|max:256',
+            'ward_id' => 'nullable|string|max:256',
+            'image' => 'nullable|image|max:2048',
         ];
     }
 }

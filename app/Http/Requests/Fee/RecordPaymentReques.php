@@ -4,7 +4,7 @@ namespace App\Http\Requests\Fee;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RecordPaymentReques extends FormRequest
+class RecordPaymentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

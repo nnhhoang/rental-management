@@ -11,7 +11,7 @@ class UpdateTenantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class UpdateTenantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:45',
+            'tel' => 'required|string|max:45',
+            'email' => 'required|email|max:256',
+            'identity_card_number' => 'nullable|string|max:45',
         ];
     }
 }

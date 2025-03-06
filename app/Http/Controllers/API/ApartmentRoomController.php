@@ -16,8 +16,6 @@ class ApartmentRoomController extends Controller
     public function __construct(ApartmentRoomService $roomService)
     {
         $this->roomService = $roomService;
-        $this->middleware('auth:sanctum');
-        $this->middleware('check.room.ownership')->only(['show', 'update', 'destroy']);
     }
 
     public function index(Request $request)
@@ -81,9 +79,6 @@ class ApartmentRoomController extends Controller
 
     public function byApartment($apartmentId)
     {
-        // Check if the apartment belongs to the authenticated user
-        // Could add middleware for this
-        
         $rooms = $this->roomService->getRoomsByApartment($apartmentId);
         
         return ApartmentRoomResource::collection($rooms);

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\TenantContract;
 
+
 class CheckContractOwnership
 {
     /**
@@ -16,20 +17,20 @@ class CheckContractOwnership
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $contractId = $request->route('contract') ?? $request->route('id');
+        $apartmentId = $request->route('apartment') ?? $request->route('id');
         
-        if (!$contractId) {
-            return response()->json(['message' => 'Contract ID not provided'], 400);
+        if (!$apartmentId) {
+            return response()->json(['message' => 'Apartment ID not provided'], 400);
         }
         
-        $contract = TenantContract::with('room.apartment')->find($contractId);
+        $apartment = Apartment::find($apartmentId);
         
-        if (!$contract) {
-            return response()->json(['message' => 'Contract not found'], 404);
+        if (!$apartment) {
+            return response()->json(['message' => 'Apartment not found'], 404);
         }
         
-        if ($contract->room->apartment->user_id !== auth()->id()) {
-            return response()->json(['message' => 'You do not have permission to access this contract'], 403);
+        if ($apartment->user_id !== auth()->id()) {
+            return response()->json(['message' => 'You do not have permission to access this apartment'], 403);
         }
         
         return $next($request);

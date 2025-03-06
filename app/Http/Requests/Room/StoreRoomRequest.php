@@ -11,7 +11,7 @@ class StoreRoomRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class StoreRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'apartment_id' => 'required|exists:apartments,id',
+            'room_number' => 'required|string|max:45',
+            'default_price' => 'required|numeric|min:0',
+            'max_tenant' => 'nullable|integer|min:1',
+            'image' => 'nullable|image|max:2048',
         ];
     }
 }

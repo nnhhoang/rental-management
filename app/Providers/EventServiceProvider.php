@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Providers;
+
+use App\Events\ApartmentCreated;
+use App\Events\RoomCreated;
+use App\Events\UnpaidFeeNotification;
+use App\Listeners\LogApartmentCreation;
+use App\Listeners\LogRoomCreation;
+use App\Listeners\LogUnpaidFeeNotification;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+
+class EventServiceProvider extends ServiceProvider
+{
+    /**
+     * The event to listener mappings for the application.
+     *
+     * @var array<class-string, array<int, class-string>>
+     */
+    protected $listen = [
+        Registered::class => [
+            SendEmailVerificationNotification::class,
+        ],
+        ApartmentCreated::class => [
+            LogApartmentCreation::class,
+        ],
+        RoomCreated::class => [
+            LogRoomCreation::class,
+        ],
+        UnpaidFeeNotification::class => [
+            LogUnpaidFeeNotification::class,
+        ],
+    ];
+
+    /**
+     * Register any events for your application.
+     */
+    public function boot(): void
+    {
+        //
+    }
+
+    /**
+     * Determine if events and listeners should be automatically discovered.
+     */
+    public function shouldDiscoverEvents(): bool
+    {
+        return false;
+    }
+}
