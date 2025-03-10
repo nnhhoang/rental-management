@@ -1,13 +1,12 @@
 <?php
-// app/Http/Controllers/API/StatisticsController.php
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Resources\RoomFeeCollectionResource;
 use App\Services\StatisticsService;
 use Illuminate\Http\Request;
 
-class StatisticsController extends Controller
+class StatisticsController extends BaseController
 {
     protected $statisticsService;
 
@@ -20,7 +19,9 @@ class StatisticsController extends Controller
     {
         $unpaidRooms = $this->statisticsService->getUnpaidRoomsForPreviousMonth();
         
-        return RoomFeeCollectionResource::collection($unpaidRooms);
+        return $this->successResponse(
+            RoomFeeCollectionResource::collection($unpaidRooms)
+        );
     }
 
     public function monthlyFeeStatistics(Request $request)
@@ -29,7 +30,7 @@ class StatisticsController extends Controller
         
         $statistics = $this->statisticsService->getMonthlyFeeStatistics($year);
         
-        return response()->json([
+        return $this->successResponse([
             'data' => $statistics,
             'year' => $year
         ]);
@@ -47,6 +48,6 @@ class StatisticsController extends Controller
             'income_statistics' => $this->statisticsService->getIncomeStatistics(date('Y')),
         ];
         
-        return response()->json($data);
+        return $this->successResponse($data);
     }
 }

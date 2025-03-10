@@ -28,4 +28,19 @@ class UpdateRoomRequest extends FormRequest
             'image' => 'nullable|image|max:2048',
         ];
     }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'room_number' => trans('validation.attributes.room_number'),
+            'default_price' => trans('validation.attributes.default_price'),
+            'max_tenant' => trans('validation.attributes.max_tenant'),
+            'image' => trans('validation.attributes.image'),
+        ];
+    }
 }

@@ -1,8 +1,7 @@
 <?php
-// app/Http/Controllers/API/UtilityController.php
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Utility\GetUsageByDateRangeRequest;
 use App\Http\Requests\Utility\StoreElectricityUsageRequest;
 use App\Http\Requests\Utility\StoreWaterUsageRequest;
@@ -10,7 +9,7 @@ use App\Http\Resources\ElectricityUsageResource;
 use App\Http\Resources\WaterUsageResource;
 use App\Services\UtilityService;
 
-class UtilityController extends Controller
+class UtilityController extends BaseController
 {
     protected $utilityService;
 
@@ -24,10 +23,12 @@ class UtilityController extends Controller
         $usage = $this->utilityService->getLatestElectricityUsage($roomId);
         
         if (!$usage) {
-            return response()->json(['message' => 'No electricity usage found for this room'], 404);
+            return $this->notFoundResponse(trans('messages.utility.not_found'));
         }
         
-        return new ElectricityUsageResource($usage);
+        return $this->successResponse(
+            new ElectricityUsageResource($usage)
+        );
     }
 
     public function getElectricityByDateRange(GetUsageByDateRangeRequest $request, $roomId)
@@ -37,7 +38,9 @@ class UtilityController extends Controller
         
         $usages = $this->utilityService->getElectricityUsageByDateRange($roomId, $startDate, $endDate);
         
-        return ElectricityUsageResource::collection($usages);
+        return $this->successResponse(
+            ElectricityUsageResource::collection($usages)
+        );
     }
 
     public function createElectricityUsage(StoreElectricityUsageRequest $request)
@@ -46,7 +49,11 @@ class UtilityController extends Controller
         
         $usage = $this->utilityService->createElectricityUsage($data);
         
-        return new ElectricityUsageResource($usage);
+        return $this->successResponse(
+            new ElectricityUsageResource($usage),
+            trans('messages.utility.created_successfully'),
+            201
+        );
     }
 
     public function getLatestWater($roomId)
@@ -54,10 +61,12 @@ class UtilityController extends Controller
         $usage = $this->utilityService->getLatestWaterUsage($roomId);
         
         if (!$usage) {
-            return response()->json(['message' => 'No water usage found for this room'], 404);
+            return $this->notFoundResponse(trans('messages.utility.not_found'));
         }
         
-        return new WaterUsageResource($usage);
+        return $this->successResponse(
+            new WaterUsageResource($usage)
+        );
     }
 
     public function getWaterByDateRange(GetUsageByDateRangeRequest $request, $roomId)
@@ -67,7 +76,9 @@ class UtilityController extends Controller
         
         $usages = $this->utilityService->getWaterUsageByDateRange($roomId, $startDate, $endDate);
         
-        return WaterUsageResource::collection($usages);
+        return $this->successResponse(
+            WaterUsageResource::collection($usages)
+        );
     }
 
     public function createWaterUsage(StoreWaterUsageRequest $request)
@@ -76,6 +87,10 @@ class UtilityController extends Controller
         
         $usage = $this->utilityService->createWaterUsage($data);
         
-        return new WaterUsageResource($usage);
+        return $this->successResponse(
+            new WaterUsageResource($usage),
+            trans('messages.utility.created_successfully'),
+            201
+        );
     }
 }

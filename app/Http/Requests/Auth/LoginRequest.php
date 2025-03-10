@@ -26,4 +26,17 @@ class LoginRequest extends FormRequest
             'password' => 'required|string',
         ];
     }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'email' => trans('validation.attributes.email'),
+            'password' => trans('validation.attributes.password'),
+        ];
+    }
 }

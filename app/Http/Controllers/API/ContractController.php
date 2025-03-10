@@ -1,16 +1,16 @@
 <?php
-// app/Http/Controllers/API/ContractController.php
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Contract\StoreContractRequest;
 use App\Http\Requests\Contract\TerminateContractRequest;
 use App\Http\Requests\Contract\UpdateContractRequest;
 use App\Http\Resources\TenantContractResource;
 use App\Services\ContractService;
 use App\Services\TenantService;
+use Illuminate\Http\Request;
 
-class ContractController extends Controller
+class ContractController extends BaseController
 {
     protected $contractService;
     protected $tenantService;
@@ -23,20 +23,53 @@ class ContractController extends Controller
         $this->tenantService = $tenantService;
     }
 
-    public function index()
+    /**
+     * Get all contracts with filtering options
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request)
     {
-        $contracts = $this->contractService->getAllContracts();
+        $filters = [
+            'active' => $request->query('active'),
+            'tenant_id' => $request->query('tenant_id'),
+            'apartment_id' => $request->query('apartment_id'),
+            'room_id' => $request->query('room_id')
+        ];
         
-        return TenantContractResource::collection($contracts);
+        $contracts = $this->contractService->getFilteredContracts($filters);
+        
+        return $this->successResponse(
+            TenantContractResource::collection($contracts)
+        );
     }
 
+    /**
+     * Get a specific contract
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show($id)
     {
         $contract = $this->contractService->getContract($id);
         
-        return new TenantContractResource($contract);
+        if (!$contract) {
+            return $this->notFoundResponse(trans('messages.contract.not_found'));
+        }
+        
+        return $this->successResponse(
+            new TenantContractResource($contract)
+        );
     }
 
+    /**
+     * Create a new contract
+     * 
+     * @param StoreContractRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(StoreContractRequest $request)
     {
         $data = $request->validated();
@@ -44,59 +77,115 @@ class ContractController extends Controller
         $result = $this->contractService->createContract($data);
         
         if (!$result['success']) {
-            return response()->json(['message' => $result['message']], 400);
+            return $this->errorResponse(
+                $result['message'] ?? trans('messages.contract.active_contract_exists'),
+                null,
+                400
+            );
         }
         
-        return new TenantContractResource($result['contract']);
+        $message = isset($result['tenant_created']) && $result['tenant_created'] 
+            ? trans('messages.contract.created_with_tenant_successfully')
+            : trans('messages.contract.created_successfully');
+        
+        return $this->successResponse(
+            new TenantContractResource($result['contract']),
+            $message,
+            201
+        );
     }
-
+    
+    /**
+     * Update an existing contract
+     * 
+     * @param UpdateContractRequest $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(UpdateContractRequest $request, $id)
     {
         $data = $request->validated();
         
         $contract = $this->contractService->updateContract($id, $data);
         
-        return new TenantContractResource($contract);
+        if (!$contract) {
+            return $this->notFoundResponse(trans('messages.contract.not_found'));
+        }
+        
+        return $this->successResponse(
+            new TenantContractResource($contract),
+            trans('messages.contract.updated_successfully')
+        );
     }
 
+    /**
+     * Terminate a contract
+     * 
+     * @param TerminateContractRequest $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function terminate(TerminateContractRequest $request, $id)
     {
         $endDate = $request->input('end_date', now());
         
         $contract = $this->contractService->terminateContract($id, $endDate);
         
-        return new TenantContractResource($contract);
+        if (!$contract) {
+            return $this->notFoundResponse(trans('messages.contract.not_found'));
+        }
+        
+        return $this->successResponse(
+            new TenantContractResource($contract),
+            trans('messages.contract.terminated_successfully')
+        );
     }
 
+    /**
+     * Delete a contract
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy($id)
     {
-        $this->contractService->deleteContract($id);
+        // Check if contract has fee collections before deleting
+        if ($this->contractService->contractHasFeeCollections($id)) {
+            return $this->errorResponse(
+                trans('messages.contract.has_fee_collections'),
+                null,
+                422
+            );
+        }
         
-        return response()->json(['message' => 'Contract deleted successfully']);
+        $result = $this->contractService->deleteContract($id);
+        
+        if (!$result) {
+            return $this->notFoundResponse(trans('messages.contract.not_found'));
+        }
+        
+        return $this->successResponse(
+            null,
+            trans('messages.contract.deleted_successfully')
+        );
     }
 
-    public function active()
-    {
-        $contracts = $this->contractService->getActiveContracts();
-        
-        return TenantContractResource::collection($contracts);
-    }
-
+    /**
+     * Get active contract for a specific room
+     * 
+     * @param int $roomId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function activeByRoom($roomId)
     {
         $contract = $this->contractService->getActiveContractByRoom($roomId);
         
         if (!$contract) {
-            return response()->json(['message' => 'No active contract found for this room'], 404);
+            return $this->notFoundResponse(trans('messages.contract.no_active_contract'));
         }
         
-        return new TenantContractResource($contract);
-    }
-
-    public function tenantHistory($tenantId)
-    {
-        $history = $this->contractService->getContractHistory($tenantId);
-        
-        return TenantContractResource::collection($history);
+        return $this->successResponse(
+            new TenantContractResource($contract)
+        );
     }
 }

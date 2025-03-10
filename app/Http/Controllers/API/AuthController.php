@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -11,7 +10,7 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
 
-class AuthController extends Controller
+class AuthController extends BaseController
 {
     protected $authService;
 
@@ -24,10 +23,11 @@ class AuthController extends Controller
     {
         $user = $this->authService->register($request->validated());
         
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => new UserResource($user)
-        ], 201);
+        return $this->successResponse(
+            new UserResource($user),
+            trans('messages.auth.registered'),
+            201
+        );
     }
 
     public function login(LoginRequest $request)
@@ -35,49 +35,55 @@ class AuthController extends Controller
         $result = $this->authService->login($request->validated());
 
         if (!$result['success']) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
+            return $this->errorResponse(
+                trans('messages.auth.login_failed'),
+                null,
+                401
+            );
         }
 
-        return response()->json([
-            'message' => 'Login successful',
+        return $this->successResponse([
             'user' => new UserResource($result['user']),
             'token' => $result['token']
-        ]);
+        ], trans('messages.auth.login_success'));
     }
 
     public function logout()
     {
         $this->authService->logout();
         
-        return response()->json([
-            'message' => 'Logged out successfully'
-        ]);
+        return $this->successResponse(
+            null,
+            trans('messages.auth.logout_success')
+        );
     }
 
     public function forgotPassword(ForgotPasswordRequest $request)
     {
-        $status = $this->authService->forgotPassword($request->email);
+        $this->authService->forgotPassword($request->email);
 
-        return response()->json([
-            'message' => 'Password reset link sent'
-        ]);
+        return $this->successResponse(
+            null,
+            trans('messages.auth.password_reset_link_sent')
+        );
     }
 
     public function resetPassword(ResetPasswordRequest $request)
     {
-        $status = $this->authService->resetPassword($request->only(
+        $this->authService->resetPassword($request->only(
             'email', 'password', 'password_confirmation', 'token'
         ));
 
-        return response()->json([
-            'message' => 'Password has been reset'
-        ]);
+        return $this->successResponse(
+            null,
+            trans('messages.auth.password_reset_success')
+        );
     }
 
     public function user()
     {
-        return new UserResource(Auth::user());
+        return $this->successResponse(
+            new UserResource(Auth::user())
+        );
     }
 }

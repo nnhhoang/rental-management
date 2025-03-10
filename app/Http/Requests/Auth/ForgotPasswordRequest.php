@@ -25,4 +25,16 @@ class ForgotPasswordRequest extends FormRequest
             'email' => 'required|email',
         ];
     }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'email' => trans('validation.attributes.email'),
+        ];
+    }
 }

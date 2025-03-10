@@ -1,15 +1,14 @@
 <?php
-// app/Http/Controllers/API/ApartmentRoomController.php
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Room\StoreRoomRequest;
 use App\Http\Requests\Room\UpdateRoomRequest;
 use App\Http\Resources\ApartmentRoomResource;
 use App\Services\ApartmentRoomService;
 use Illuminate\Http\Request;
 
-class ApartmentRoomController extends Controller
+class ApartmentRoomController extends BaseController
 {
     protected $roomService;
 
@@ -40,14 +39,22 @@ class ApartmentRoomController extends Controller
             $rooms = $this->roomService->getAllRooms($perPage);
         }
         
-        return ApartmentRoomResource::collection($rooms);
+        return $this->successResponse(
+            ApartmentRoomResource::collection($rooms)
+        );
     }
 
     public function show($id)
     {
         $room = $this->roomService->getRoom($id);
         
-        return new ApartmentRoomResource($room);
+        if (!$room) {
+            return $this->notFoundResponse(trans('messages.room.not_found'));
+        }
+        
+        return $this->successResponse(
+            new ApartmentRoomResource($room)
+        );
     }
 
     public function store(StoreRoomRequest $request)
@@ -56,7 +63,11 @@ class ApartmentRoomController extends Controller
         
         $room = $this->roomService->createRoom($data);
         
-        return new ApartmentRoomResource($room);
+        return $this->successResponse(
+            new ApartmentRoomResource($room),
+            trans('messages.room.created_successfully'),
+            201
+        );
     }
 
     public function update(UpdateRoomRequest $request, $id)
@@ -65,36 +76,54 @@ class ApartmentRoomController extends Controller
         
         $room = $this->roomService->updateRoom($id, $data);
         
-        return new ApartmentRoomResource($room);
+        if (!$room) {
+            return $this->notFoundResponse(trans('messages.room.not_found'));
+        }
+        
+        return $this->successResponse(
+            new ApartmentRoomResource($room),
+            trans('messages.room.updated_successfully')
+        );
     }
 
     public function destroy($id)
     {
-        $this->roomService->deleteRoom($id);
+        $result = $this->roomService->deleteRoom($id);
         
-        return response()->json([
-            'message' => 'Room deleted successfully'
-        ]);
+        if (!$result) {
+            return $this->notFoundResponse(trans('messages.room.not_found'));
+        }
+        
+        return $this->successResponse(
+            null,
+            trans('messages.room.deleted_successfully')
+        );
     }
 
     public function byApartment($apartmentId)
     {
         $rooms = $this->roomService->getRoomsByApartment($apartmentId);
         
-        return ApartmentRoomResource::collection($rooms);
+        return $this->successResponse(
+            ApartmentRoomResource::collection($rooms)
+        );
     }
 
     public function withActiveContract()
     {
         $rooms = $this->roomService->getRoomsWithActiveContract();
         
-        return ApartmentRoomResource::collection($rooms);
+        return $this->successResponse(
+            ApartmentRoomResource::collection($rooms)
+        );
     }
 
     public function withoutTenant()
     {
         $rooms = $this->roomService->getRoomsWithoutTenant();
         
-        return ApartmentRoomResource::collection($rooms);
+        return $this->successResponse(
+            ApartmentRoomResource::collection($rooms)
+        );
     }
 }

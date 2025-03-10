@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\VietnamesePhoneNumber;
+use App\Rules\VietnameseIdCard;
 
 class UpdateTenantRequest extends FormRequest
 {
@@ -23,9 +25,24 @@ class UpdateTenantRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:45',
-            'tel' => 'required|string|max:45',
+            'tel' => ['required', 'string', 'max:45', new VietnamesePhoneNumber],
             'email' => 'required|email|max:256',
-            'identity_card_number' => 'nullable|string|max:45',
+            'identity_card_number' => ['required', 'string', 'max:45', new VietnameseIdCard],
+        ];
+    }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => trans('validation.attributes.name'),
+            'tel' => trans('validation.attributes.tel'),
+            'email' => trans('validation.attributes.email'),
+            'identity_card_number' => trans('validation.attributes.identity_card_number'),
         ];
     }
 }

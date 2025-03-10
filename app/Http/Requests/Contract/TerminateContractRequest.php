@@ -25,4 +25,16 @@ class TerminateContractRequest extends FormRequest
             'end_date' => 'nullable|date',
         ];
     }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'end_date' => trans('validation.attributes.end_date'),
+        ];
+    }
 }

@@ -32,4 +32,23 @@ class StoreFeeRequest extends FormRequest
             'total_paid' => 'required|numeric|min:0',
         ];
     }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'apartment_room_id' => trans('validation.attributes.apartment_id'),
+            'electricity_number_before' => trans('validation.attributes.electricity_number_before'),
+            'electricity_number_after' => trans('validation.attributes.electricity_number_after'),
+            'water_number_before' => trans('validation.attributes.water_number_before'),
+            'water_number_after' => trans('validation.attributes.water_number_after'),
+            'charge_date' => trans('validation.attributes.charge_date'),
+            'total_price' => trans('validation.attributes.total_price'),
+            'total_paid' => trans('validation.attributes.total_paid'),
+        ];
+    }
 }

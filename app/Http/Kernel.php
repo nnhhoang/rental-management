@@ -23,6 +23,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\SetLocale::class, // Add this line to register the middleware globally
     ];
 
     /**
@@ -72,6 +73,7 @@ class Kernel extends HttpKernel
         'check.room.ownership' => \App\Http\Middleware\CheckRoomOwnership::class,
         'check.contract.ownership' => \App\Http\Middleware\CheckContractOwnership::class,
         'check.fee.ownership' => \App\Http\Middleware\CheckFeeOwnership::class,
+        'set.locale' => \App\Http\Middleware\SetLocale::class, // Add alias for the locale middleware
     ];
 
     /**

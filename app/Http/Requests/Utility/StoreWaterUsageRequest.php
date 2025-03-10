@@ -28,4 +28,19 @@ class StoreWaterUsageRequest extends FormRequest
             'image' => 'nullable|image|max:2048',
         ];
     }
+    
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'apartment_room_id' => trans('validation.attributes.apartment_id'),
+            'usage_number' => trans('validation.attributes.usage_number'),
+            'input_date' => trans('validation.attributes.input_date'),
+            'image' => trans('validation.attributes.image'),
+        ];
+    }
 }

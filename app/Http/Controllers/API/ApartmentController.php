@@ -8,6 +8,7 @@ use App\Http\Requests\Apartment\UpdateApartmentRequest;
 use App\Http\Resources\ApartmentResource;
 use App\Services\ApartmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class ApartmentController extends Controller
 {
@@ -46,7 +47,10 @@ class ApartmentController extends Controller
         
         $apartment = $this->apartmentService->createApartment($data);
         
-        return new ApartmentResource($apartment);
+        return response()->json([
+            'message' => trans('messages.apartment.created_successfully'),
+            'data' => new ApartmentResource($apartment)
+        ], 201);
     }
 
     public function update(UpdateApartmentRequest $request, $id)
@@ -55,7 +59,10 @@ class ApartmentController extends Controller
         
         $apartment = $this->apartmentService->updateApartment($id, $data);
         
-        return new ApartmentResource($apartment);
+        return response()->json([
+            'message' => trans('messages.apartment.updated_successfully'),
+            'data' => new ApartmentResource($apartment)
+        ]);
     }
 
     public function destroy($id)
@@ -63,7 +70,7 @@ class ApartmentController extends Controller
         $this->apartmentService->deleteApartment($id);
         
         return response()->json([
-            'message' => 'Apartment deleted successfully'
+            'message' => trans('messages.apartment.deleted_successfully')
         ]);
     }
 
@@ -72,5 +79,31 @@ class ApartmentController extends Controller
         $apartments = $this->apartmentService->getUserApartments(auth()->id());
         
         return ApartmentResource::collection($apartments);
+    }
+    
+    /**
+     * Change the current locale.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function changeLocale(Request $request)
+    {
+        $locale = $request->input('locale');
+        
+        if (!in_array($locale, ['en', 'vi'])) {
+            return response()->json([
+                'message' => 'Invalid locale provided'
+            ], 400);
+        }
+        
+        // Set session locale
+        $request->session()->put('locale', $locale);
+        App::setLocale($locale);
+        
+        return response()->json([
+            'message' => trans('messages.locale_changed'),
+            'locale' => $locale
+        ]);
     }
 }
