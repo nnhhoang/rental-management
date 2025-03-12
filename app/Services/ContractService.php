@@ -1,24 +1,29 @@
 <?php
 namespace App\Services;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use App\Repositories\Contracts\TenantContractRepositoryInterface;
 use App\Repositories\Contracts\ApartmentRoomRepositoryInterface;
 use App\Repositories\Contracts\RoomFeeCollectionRepositoryInterface;
+use App\Repositories\Contracts\TenantRepositoryInterface;
 
-class ContractService
-{
+class ContractService {
     protected $contractRepository;
     protected $roomRepository;
     protected $feeCollectionRepository;
+    protected $tenantRepository;
 
     public function __construct(
         TenantContractRepositoryInterface $contractRepository,
         ApartmentRoomRepositoryInterface $roomRepository,
-        RoomFeeCollectionRepositoryInterface $feeCollectionRepository
+        RoomFeeCollectionRepositoryInterface $feeCollectionRepository,
+        TenantRepositoryInterface $tenantRepository
     ) {
         $this->contractRepository = $contractRepository;
         $this->roomRepository = $roomRepository;
         $this->feeCollectionRepository = $feeCollectionRepository;
+        $this->tenantRepository = $tenantRepository;
     }
 
     /**
@@ -131,63 +136,61 @@ class ContractService
      */
     public function createContract(array $data)
     {
-        $activeContract = $this->contractRepository->getActiveContractByRoom($data['apartment_room_id']);
-        
-        if ($activeContract) {
+        DB::beginTransaction();
+    
+        try {
+            $tenantId = $data['tenant_id'] ?? null;
+    
+                $tenantData = [
+                    'name' => $data['name'],
+                    'tel' => $data['tel'],
+                    'email' => $data['email'] ?? null,
+                    'identity_card_number' => $data['identity_card_number'],
+                ];
+    
+                $tenant =  $this->tenantRepository->create($tenantData);
+                $tenantId = $tenant->id;
+
+            $startDate = !empty($data['start_date']) ? Carbon::parse($data['start_date']) : now();
+
+            $endDate = Carbon::parse($data['end_date']);
+
+
+            $contractData = [
+                'apartment_room_id' => $data['apartment_room_id'],
+                'tenant_id' => $tenantId,
+                'pay_period' => $data['pay_period'],
+                'price' => $data['price'],
+                'electricity_pay_type' => $data['electricity_pay_type'],
+                'electricity_price' => $data['electricity_price'],
+                'electricity_number_start' => $data['electricity_number_start'],
+                'water_pay_type' => $data['water_pay_type'],
+                'water_price' => $data['water_price'],
+                'water_number_start' => $data['water_number_start'],
+                'number_of_tenant_current' => $data['number_of_tenant_current'],
+                'note' => $data['note'] ?? null,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ];
+    
+            $contract = $this->contractRepository->create($contractData);
+    
+            DB::commit();
+    
+            return [
+                'success' => true,
+                'contract' => $contract,
+                'tenant_created' => !empty($data['is_create_tenant'])
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
             return [
                 'success' => false,
-                'message' => 'Room already has an active contract'
+                'message' => $e->getMessage(),
             ];
         }
+    }    
     
-        $tenantId = $data['tenant_id'] ?? null;
-        
-        if (isset($data['is_create_tenant']) && $data['is_create_tenant'] === true) {
-            $tenantData = [
-                'name' => $data['tenant_name'],
-                'tel' => $data['tel'],
-                'email' => $data['email'],
-                'identity_card_number' => $data['id_card'],
-            ];
-            
-            $tenant = app(TenantService::class)->createTenant($tenantData);
-            $tenantId = $tenant->id;
-        }
-        
-        $contractData = [
-            'apartment_room_id' => $data['apartment_room_id'],
-            'tenant_id' => $tenantId,
-            'pay_period' => $data['pay_period'],
-            'price' => $data['price'],
-            'electricity_pay_type' => $data['electricity_pay_type'],
-            'electricity_price' => $data['electricity_price'],
-            'electricity_number_start' => $data['electricity_number_start'],
-            'water_pay_type' => $data['water_pay_type'],
-            'water_price' => $data['water_price'],
-            'water_number_start' => $data['water_number_start'],
-            'number_of_tenant_current' => $data['number_of_tenant_current'],
-            'note' => $data['note'] ?? null,
-        ];
-        
-        if (isset($data['start_date'])) {
-            $contractData['start_date'] = $data['start_date'];
-        } else {
-            $contractData['start_date'] = now();
-        }
-        
-        if (isset($data['end_date'])) {
-            $contractData['end_date'] = $data['end_date'];
-        }
-        
-        $contract = $this->contractRepository->create($contractData);
-        
-        return [
-            'success' => true,
-            'contract' => $contract,
-            'tenant_created' => isset($data['is_create_tenant']) && $data['is_create_tenant'] === true
-        ];
-    }
-
     /**
      * Update a contract
      * 

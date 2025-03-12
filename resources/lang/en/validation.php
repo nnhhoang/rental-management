@@ -151,6 +151,8 @@ return [
         'tel' => 'telephone number',
         'identity_card_number' => 'identity card number',
 
+        'apartment_room_id' => 'room',
+        'is_create_tenant' => 'create tenant',
         'tenant_contract_id' => 'contract',
         'pay_period' => 'payment period',
         'price' => 'price',

@@ -22,9 +22,24 @@ class TerminateContractRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'end_date' => 'nullable|date',
+            'end_date' => 'required|date|date_format:Y-m-d|after_or_equal:today',
+            'note' => 'nullable|string|max:500',
         ];
     }
+    
+    /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        if (!$this->filled('end_date')) {
+            $this->merge([
+                'end_date' => now()->format('Y-m-d')
+            ]);
+        }
+    }    
     
     /**
      * Get custom attributes for validator errors.
@@ -35,6 +50,7 @@ class TerminateContractRequest extends FormRequest
     {
         return [
             'end_date' => trans('validation.attributes.end_date'),
+            'note' => trans('validation.attributes.note'),
         ];
     }
 }

@@ -29,7 +29,7 @@ class StoreContractRequest extends FormRequest
             'apartment_room_id' => [
                 'required', 
                 'exists:apartment_rooms,id',
-                new RoomAvailableForContract()
+                new RoomAvailableForContract($this->input('start_date'))
             ],
             'is_create_tenant' => 'required|boolean',
             'tenant_id' => [
@@ -37,7 +37,7 @@ class StoreContractRequest extends FormRequest
                 'exists:tenants,id',
                 'nullable'
             ],
-            'tenant_name' => 'required_if:is_create_tenant,true|string|max:45',
+            'name' => 'required_if:is_create_tenant,true|string|max:45',
             'tel' => [
                 'required_if:is_create_tenant,true',
                 new VietnamesePhoneNumber
@@ -47,7 +47,7 @@ class StoreContractRequest extends FormRequest
                 'required_if:is_create_tenant,true',
                 new VietnameseIdCard
             ],
-            'pay_period' => 'required_unless:is_indefinite,true|nullable|integer|in:3,6,12',
+            'pay_period' => 'required|integer|in:3,6,12',
             'price' => 'required|numeric|min:0',
             'electricity_pay_type' => 'required|integer|in:1,2,3',
             'electricity_price' => 'required|numeric|min:0',
@@ -57,7 +57,7 @@ class StoreContractRequest extends FormRequest
             'water_number_start' => 'required|integer|min:0',
             'number_of_tenant_current' => 'required|integer|min:1',
             'note' => 'nullable|string',
-            'start_date' => 'nullable|date|date_format:Y-m-d|before_or_equal:'.now()->format('Y-m-d'),
+            'start_date' => 'required|date|date_format:Y-m-d|before_or_equal:'.now()->format('Y-m-d'),
             'end_date' => 'nullable|date|date_format:Y-m-d|after:start_date',
         ];
     }
@@ -77,15 +77,17 @@ class StoreContractRequest extends FormRequest
      */
     protected function mergeDefaultValues()
     {
-        if (!$this->has('start_date')) {
+        if (!$this->filled('start_date')) {
             $this->merge([
                 'start_date' => now()->format('Y-m-d')
             ]);
         }
-        if ($this->has('is_indefinite') && $this->is_indefinite === true) {
+    
+        if ($this->boolean('is_indefinite')) {
             $this->merge(['end_date' => null]);
         }
     }
+    
     
     /**
      * Get custom attributes for validator errors.
@@ -98,10 +100,10 @@ class StoreContractRequest extends FormRequest
             'apartment_room_id' => trans('validation.apartment_room_id'),
             'is_create_tenant' => trans('validation.is_create_tenant'),
             'tenant_id' => trans('validation.tenant_id'),
-            'tenant_name' => trans('validation.tenant_name'),
+            'name' => trans('validation.tenant_name'),
             'tel' => trans('validation.tel'),
             'email' => trans('validation.email'),
-            'id_card' => trans('validation.id_card'),
+            'identity_card_number' => trans('validation.identity_card_number'),
             'pay_period' => trans('validation.pay_period'),
             'price' => trans('validation.price'),
             'electricity_pay_type' => trans('validation.electricity_pay_type'),
@@ -114,6 +116,7 @@ class StoreContractRequest extends FormRequest
             'note' => trans('validation.note'),
             'start_date' => trans('validation.start_date'),
             'end_date' => trans('validation.end_date'),
+            'is_indefinite' => trans('validation.is_indefinite'),
         ];
     }
 }
