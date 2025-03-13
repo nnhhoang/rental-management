@@ -5,6 +5,7 @@ use App\Repositories\Contracts\ElectricityUsageRepositoryInterface;
 use App\Repositories\Contracts\WaterUsageRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class UtilityService
@@ -32,12 +33,28 @@ class UtilityService
 
     public function createElectricityUsage(array $data)
     {
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            $imagePath = $this->uploadImage($data['image'], 'electricity');
-            $data['image'] = $imagePath;
+        try {
+            DB::beginTransaction();
+            
+            $imagePath = null;
+            
+            if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+                $imagePath = $this->uploadImage($data['image'], 'electricity');
+                $data['image'] = $imagePath;
+            }
+            
+            $usage = $this->electricityRepository->create($data);
+            
+            DB::commit();
+            return $usage;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // If file was uploaded, delete it
+            if (isset($imagePath) && $imagePath) {
+                Storage::delete($imagePath);
+            }
+            throw $e;
         }
-        
-        return $this->electricityRepository->create($data);
     }
 
     public function getLatestWaterUsage(int $roomId)
@@ -52,12 +69,28 @@ class UtilityService
 
     public function createWaterUsage(array $data)
     {
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            $imagePath = $this->uploadImage($data['image'], 'water');
-            $data['image'] = $imagePath;
+        try {
+            DB::beginTransaction();
+            
+            $imagePath = null;
+            
+            if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+                $imagePath = $this->uploadImage($data['image'], 'water');
+                $data['image'] = $imagePath;
+            }
+            
+            $usage = $this->waterRepository->create($data);
+            
+            DB::commit();
+            return $usage;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // If file was uploaded, delete it
+            if (isset($imagePath) && $imagePath) {
+                Storage::delete($imagePath);
+            }
+            throw $e;
         }
-        
-        return $this->waterRepository->create($data);
     }
 
     private function uploadImage(UploadedFile $file, string $type)

@@ -5,6 +5,7 @@ use App\Events\RoomCreated;
 use App\Repositories\Contracts\ApartmentRoomRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ApartmentRoomService
@@ -38,57 +39,98 @@ class ApartmentRoomService
 
     public function createRoom(array $data)
     {
-        $imagePath = null;
-        
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            $imagePath = $this->uploadImage($data['image']);
-            $data['image'] = $imagePath;
-        }
-        
-        $room = $this->roomRepository->create($data);
-        
-        // Dispatch room created event
-        event(new RoomCreated($room));
-        
-        return $room;
-    }
-
-    public function updateRoom(int $id, array $data)
-    {
-        $room = $this->roomRepository->find($id);
-        
-        if (!$room) {
-            return false;
-        }
-        
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            // Delete old image if exists
-            if ($room->image) {
-                Storage::delete($room->image);
+        try {
+            DB::beginTransaction();
+            
+            $imagePath = null;
+            
+            if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+                $imagePath = $this->uploadImage($data['image']);
+                $data['image'] = $imagePath;
             }
             
-            // Upload new image
-            $imagePath = $this->uploadImage($data['image']);
-            $data['image'] = $imagePath;
+            $room = $this->roomRepository->create($data);
+            
+            // Dispatch room created event
+            event(new RoomCreated($room));
+            
+            DB::commit();
+            return $room;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // If file was uploaded, delete it
+            if (isset($imagePath) && $imagePath) {
+                Storage::delete($imagePath);
+            }
+            throw $e;
         }
-        
-        return $this->roomRepository->update($id, $data);
     }
-
+    
+    public function updateRoom(int $id, array $data)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $room = $this->roomRepository->find($id);
+            
+            if (!$room) {
+                return false;
+            }
+            
+            $oldImage = $room->image;
+            $newImage = null;
+            
+            if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+                // Upload new image
+                $newImage = $this->uploadImage($data['image']);
+                $data['image'] = $newImage;
+            }
+            
+            $result = $this->roomRepository->update($id, $data);
+            
+            // Delete old image if exists and a new one was uploaded
+            if ($oldImage && $newImage) {
+                Storage::delete($oldImage);
+            }
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // If a new file was uploaded, delete it
+            if (isset($newImage) && $newImage) {
+                Storage::delete($newImage);
+            }
+            throw $e;
+        }
+    }
+    
     public function deleteRoom(int $id)
     {
-        $room = $this->roomRepository->find($id);
-        
-        if (!$room) {
-            return false;
+        try {
+            DB::beginTransaction();
+            
+            $room = $this->roomRepository->find($id);
+            
+            if (!$room) {
+                return false;
+            }
+            
+            $image = $room->image;
+            
+            $result = $this->roomRepository->delete($id);
+            
+            // Delete image if exists
+            if ($image) {
+                Storage::delete($image);
+            }
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-        
-        // Delete image if exists
-        if ($room->image) {
-            Storage::delete($room->image);
-        }
-        
-        return $this->roomRepository->delete($id);
     }
 
     public function getRoomsWithActiveContract()

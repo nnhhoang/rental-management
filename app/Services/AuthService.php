@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 
@@ -25,11 +26,21 @@ class AuthService
      */
     public function register(array $data): User
     {
-        return $this->userRepository->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        try {
+            DB::beginTransaction();
+            
+            $user = $this->userRepository->create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+            
+            DB::commit();
+            return $user;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -99,12 +110,22 @@ class AuthService
      */
     public function resetPassword(array $data): string
     {
-        return Password::reset(
-            $data,
-            function (User $user, string $password) {
-                $user->password = Hash::make($password);
-                $user->save();
-            }
-        );
+        try {
+            DB::beginTransaction();
+            
+            $status = Password::reset(
+                $data,
+                function (User $user, string $password) {
+                    $user->password = Hash::make($password);
+                    $user->save();
+                }
+            );
+            
+            DB::commit();
+            return $status;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

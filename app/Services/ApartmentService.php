@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Events\ApartmentCreated;
 use App\Repositories\Contracts\ApartmentRepositoryInterface;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -38,59 +39,99 @@ class ApartmentService
 
     public function createApartment(array $data)
     {
-        $imagePath = null;
-        
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            $imagePath = $this->uploadImage($data['image']);
-            $data['image'] = $imagePath;
+        try {
+            DB::beginTransaction();
+            
+            $imagePath = null;
+            
+            if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+                $imagePath = $this->uploadImage($data['image']);
+                $data['image'] = $imagePath;
+            }
+            
+            $apartment = $this->apartmentRepository->create($data);
+            
+            // Dispatch apartment created event
+            event(new ApartmentCreated($apartment));
+            
+            DB::commit();
+            return $apartment;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // If file was uploaded, delete it
+            if (isset($imagePath) && $imagePath) {
+                Storage::delete($imagePath);
+            }
+            throw $e;
         }
-        
-        $apartment = $this->apartmentRepository->create($data);
-        
-        // Dispatch apartment created event
-        event(new ApartmentCreated($apartment));
-        
-        return $apartment;
     }
 
     public function updateApartment(int $id, array $data)
     {
-        $apartment = $this->apartmentRepository->find($id);
-        
-        if (!$apartment) {
-            return false;
-        }
-        
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            // Delete old image if exists
-            if ($apartment->image) {
-                Storage::delete($apartment->image);
+        try {
+            DB::beginTransaction();
+            
+            $apartment = $this->apartmentRepository->find($id);
+            
+            if (!$apartment) {
+                return false;
             }
             
-            // Upload new image
-            $imagePath = $this->uploadImage($data['image']);
-            $data['image'] = $imagePath;
+            $oldImage = $apartment->image;
+            $newImage = null;
+            
+            if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+                // Upload new image
+                $newImage = $this->uploadImage($data['image']);
+                $data['image'] = $newImage;
+            }
+            
+            $result = $this->apartmentRepository->update($id, $data);
+            
+            // Delete old image if exists and a new one was uploaded
+            if ($oldImage && $newImage) {
+                Storage::delete($oldImage);
+            }
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // If a new file was uploaded, delete it
+            if (isset($newImage) && $newImage) {
+                Storage::delete($newImage);
+            }
+            throw $e;
         }
-        
-        return $this->apartmentRepository->update($id, $data);
     }
-
+    
     public function deleteApartment(int $id)
     {
-        $apartment = $this->apartmentRepository->find($id);
-        
-        if (!$apartment) {
-            return false;
+        try {
+            DB::beginTransaction();
+            
+            $apartment = $this->apartmentRepository->find($id);
+            
+            if (!$apartment) {
+                return false;
+            }
+            
+            $image = $apartment->image;
+            
+            $result = $this->apartmentRepository->delete($id);
+            
+            // Delete image if exists
+            if ($image) {
+                Storage::delete($image);
+            }
+            
+            DB::commit();
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-        
-        // Delete image if exists
-        if ($apartment->image) {
-            Storage::delete($apartment->image);
-        }
-        
-        return $this->apartmentRepository->delete($id);
     }
-
     private function uploadImage(UploadedFile $file)
     {
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
