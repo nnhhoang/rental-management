@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Eloquent;
 
 use App\Models\TenantContract;
@@ -13,7 +14,7 @@ class TenantContractRepository extends BaseRepository implements TenantContractR
 
     /**
      * Get active contracts (not terminated or end date is in the future)
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getActiveContracts()
@@ -30,8 +31,7 @@ class TenantContractRepository extends BaseRepository implements TenantContractR
 
     /**
      * Get active contract for a specific room
-     * 
-     * @param int $roomId
+     *
      * @return \App\Models\TenantContract|null
      */
     public function getActiveContractByRoom(int $roomId)
@@ -48,8 +48,7 @@ class TenantContractRepository extends BaseRepository implements TenantContractR
 
     /**
      * Get all contracts for a specific tenant
-     * 
-     * @param int $tenantId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getContractHistory(int $tenantId)
@@ -60,11 +59,10 @@ class TenantContractRepository extends BaseRepository implements TenantContractR
             ->orderBy('created_at', 'desc')
             ->get();
     }
-    
+
     /**
      * Check if tenant has any active contracts
-     * 
-     * @param int $tenantId
+     *
      * @return bool
      */
     public function tenantHasActiveContracts(int $tenantId)
@@ -77,11 +75,10 @@ class TenantContractRepository extends BaseRepository implements TenantContractR
             })
             ->exists();
     }
-    
+
     /**
      * Get all contracts for rooms in a specific apartment
-     * 
-     * @param int $apartmentId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getContractsByApartment(int $apartmentId)
@@ -94,11 +91,10 @@ class TenantContractRepository extends BaseRepository implements TenantContractR
             ->orderBy('created_at', 'desc')
             ->get();
     }
-    
+
     /**
      * Get all contracts for a specific room
-     * 
-     * @param int $roomId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getContractsByRoom(int $roomId)

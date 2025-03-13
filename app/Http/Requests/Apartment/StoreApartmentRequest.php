@@ -30,7 +30,7 @@ class StoreApartmentRequest extends FormRequest
             'image' => 'nullable|image|max:2048',
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

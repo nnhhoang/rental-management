@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests\Contract;
 
+use App\Rules\RoomAvailableForContract;
+use App\Rules\VietnameseIdCard;
+use App\Rules\VietnamesePhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Rules\PhoneNumber;
-use App\Rules\IdCard;
-use App\Rules\CheckContractDateAvailable;
 
 class StoreContractRequest extends FormRequest
 {
@@ -27,23 +26,25 @@ class StoreContractRequest extends FormRequest
     {
         return [
             'apartment_room_id' => [
-                'required', 
+                'required',
                 'exists:apartment_rooms,id',
+                new RoomAvailableForContract($this->input('start_date')),
             ],
             'is_create_tenant' => 'required|boolean',
             'tenant_id' => [
                 'required_if:is_create_tenant,false',
                 'exists:tenants,id',
+                'nullable',
             ],
             'name' => 'required_if:is_create_tenant,true|string|max:45',
             'tel' => [
                 'required_if:is_create_tenant,true',
-                new PhoneNumber
+                new VietnamesePhoneNumber,
             ],
             'email' => 'required_if:is_create_tenant,true|email|max:256',
             'identity_card_number' => [
                 'required_if:is_create_tenant,true',
-                new IdCard
+                new VietnameseIdCard,
             ],
             'pay_period' => 'required|integer|in:3,6,12',
             'price' => 'required|numeric|min:0',
@@ -64,7 +65,33 @@ class StoreContractRequest extends FormRequest
             'end_date' => 'required|date|date_format:Y-m-d|after:start_date',
         ];
     }
-    
+
+    /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->mergeDefaultValues();
+    }
+
+    /**
+     * Merge default values if not provided
+     */
+    protected function mergeDefaultValues()
+    {
+        if (! $this->filled('start_date')) {
+            $this->merge([
+                'start_date' => now()->format('Y-m-d'),
+            ]);
+        }
+
+        if ($this->boolean('is_indefinite')) {
+            $this->merge(['end_date' => null]);
+        }
+    }
+
     /**
      * Get custom attributes for validator errors.
      *

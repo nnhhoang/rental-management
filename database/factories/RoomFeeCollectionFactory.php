@@ -2,11 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\ApartmentRoom;
 use App\Models\RoomFeeCollection;
-use App\Models\Tenant;
 use App\Models\TenantContract;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -21,14 +18,14 @@ class RoomFeeCollectionFactory extends Factory
         $electricityAfter = $electricityBefore + $this->faker->numberBetween(30, 200);
         $waterBefore = $this->faker->numberBetween(10, 100);
         $waterAfter = $waterBefore + $this->faker->numberBetween(3, 20);
-        
+
         // Calculate base fee components
         $electricityUsage = $electricityAfter - $electricityBefore;
         $waterUsage = $waterAfter - $waterBefore;
-        
+
         // Base price from contract
         $basePrice = $contract->price;
-        
+
         // Calculate electricity cost based on pay type
         $electricityCost = 0;
         if ($contract->electricity_pay_type == 1) { // per person
@@ -38,7 +35,7 @@ class RoomFeeCollectionFactory extends Factory
         } else { // by usage
             $electricityCost = $electricityUsage * $contract->electricity_price;
         }
-        
+
         // Calculate water cost based on pay type
         $waterCost = 0;
         if ($contract->water_pay_type == 1) { // per person
@@ -48,14 +45,14 @@ class RoomFeeCollectionFactory extends Factory
         } else { // by usage
             $waterCost = $waterUsage * $contract->water_price;
         }
-        
+
         // Total price
         $totalPrice = $basePrice + $electricityCost + $waterCost;
-        
+
         // Determine if fully paid
         $fullyPaid = $this->faker->boolean(70); // 70% chance of being fully paid
         $totalPaid = $fullyPaid ? $totalPrice : $this->faker->numberBetween($totalPrice * 0.3, $totalPrice * 0.9);
-        
+
         return [
             'tenant_contract_id' => $contract->id,
             'apartment_room_id' => $contract->apartment_room_id,
@@ -71,7 +68,7 @@ class RoomFeeCollectionFactory extends Factory
             'fee_collection_uuid' => Str::uuid(),
         ];
     }
-    
+
     /**
      * Define a state for paid fees
      */
@@ -83,7 +80,7 @@ class RoomFeeCollectionFactory extends Factory
             ];
         });
     }
-    
+
     /**
      * Define a state for unpaid fees
      */
@@ -95,7 +92,7 @@ class RoomFeeCollectionFactory extends Factory
             ];
         });
     }
-    
+
     /**
      * For fees created with specific existing relations
      */

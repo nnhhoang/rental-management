@@ -2,15 +2,11 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
+use App\Models\Apartment;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Apartment;
-
 
 class ApartmentCreated
 {
@@ -19,14 +15,13 @@ class ApartmentCreated
     /**
      * Create a new event instance.
      */
-
     public $apartment;
 
     public function __construct(Apartment $apartment)
     {
         $this->apartment = $apartment;
     }
-    
+
     /**
      * Get the channels the event should broadcast on.
      *

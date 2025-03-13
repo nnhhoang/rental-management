@@ -3,10 +3,6 @@
 namespace App\Http\Requests\Contract;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Rules\VietnamesePhoneNumber;
-use App\Rules\VietnameseIdCard;
-use App\Rules\RoomAvailableForContract;
 
 class UpdateContractRequest extends FormRequest
 {
@@ -40,7 +36,7 @@ class UpdateContractRequest extends FormRequest
             'end_date' => 'required|date|date_format:Y-m-d|after:start_date',
         ];
     }
-    
+
     /**
      * Prepare the data for validation.
      *
@@ -50,19 +46,19 @@ class UpdateContractRequest extends FormRequest
     {
         $this->mergeDefaultValues();
     }
-    
+
     /**
      * Merge default values if not provided
      */
     protected function mergeDefaultValues()
     {
-        if (!$this->filled('start_date')) {
+        if (! $this->filled('start_date')) {
             $this->merge([
-                'start_date' => now()->format('Y-m-d')
+                'start_date' => now()->format('Y-m-d'),
             ]);
         }
-    }    
-    
+    }
+
     /**
      * Get custom attributes for validator errors.
      *

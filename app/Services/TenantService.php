@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Repositories\Contracts\TenantRepositoryInterface;
@@ -14,8 +15,8 @@ class TenantService
 
     /**
      * Get all tenants, optionally with their contracts
-     * 
-     * @param bool $withContracts
+     *
+     * @param  bool  $withContracts
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getAllTenants($withContracts = false)
@@ -23,15 +24,14 @@ class TenantService
         if ($withContracts) {
             return $this->tenantRepository->getAllWithContracts();
         }
-        
+
         return $this->tenantRepository->all();
     }
 
     /**
      * Search tenants by query string, optionally with their contracts
-     * 
-     * @param string $query
-     * @param bool $withContracts
+     *
+     * @param  bool  $withContracts
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function searchTenants(string $query, $withContracts = false)
@@ -39,15 +39,14 @@ class TenantService
         if ($withContracts) {
             return $this->tenantRepository->searchWithContracts($query);
         }
-        
+
         return $this->tenantRepository->searchTenants($query);
     }
 
     /**
      * Get a tenant by ID, optionally with their contracts
-     * 
-     * @param int $id
-     * @param bool $withContracts
+     *
+     * @param  bool  $withContracts
      * @return \App\Models\Tenant|null
      */
     public function getTenant(int $id, $withContracts = false)
@@ -55,15 +54,14 @@ class TenantService
         if ($withContracts) {
             return $this->tenantRepository->findWithContracts($id);
         }
-        
+
         return $this->tenantRepository->find($id);
     }
 
     /**
      * Get tenants by user ID, optionally with their contracts
-     * 
-     * @param int $userId
-     * @param bool $withContracts
+     *
+     * @param  bool  $withContracts
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTenantsByUser(int $userId, $withContracts = false)
@@ -71,14 +69,13 @@ class TenantService
         if ($withContracts) {
             return $this->tenantRepository->getTenantsByUserWithContracts($userId);
         }
-        
+
         return $this->tenantRepository->getTenantsByUser($userId);
     }
 
     /**
      * Create a new tenant
-     * 
-     * @param array $data
+     *
      * @return \App\Models\Tenant
      */
     public function createTenant(array $data)
@@ -88,9 +85,7 @@ class TenantService
 
     /**
      * Update an existing tenant
-     * 
-     * @param int $id
-     * @param array $data
+     *
      * @return \App\Models\Tenant|bool
      */
     public function updateTenant(int $id, array $data)
@@ -100,8 +95,7 @@ class TenantService
 
     /**
      * Delete a tenant
-     * 
-     * @param int $id
+     *
      * @return bool
      */
     public function deleteTenant(int $id)

@@ -31,7 +31,7 @@ class UpdateFeeRequest extends FormRequest
             'total_paid' => 'required|numeric|min:0',
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

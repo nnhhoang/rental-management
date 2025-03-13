@@ -22,7 +22,7 @@ class AuthController extends BaseController
     public function register(RegisterRequest $request)
     {
         $user = $this->authService->register($request->validated());
-        
+
         return $this->successResponse(
             new UserResource($user),
             trans('messages.auth.registered'),
@@ -34,7 +34,7 @@ class AuthController extends BaseController
     {
         $result = $this->authService->login($request->validated());
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->errorResponse(
                 trans('messages.auth.login_failed'),
                 null,
@@ -44,14 +44,14 @@ class AuthController extends BaseController
 
         return $this->successResponse([
             'user' => new UserResource($result['user']),
-            'token' => $result['token']
+            'token' => $result['token'],
         ], trans('messages.auth.login_success'));
     }
 
     public function logout()
     {
         $this->authService->logout();
-        
+
         return $this->successResponse(
             null,
             trans('messages.auth.logout_success')

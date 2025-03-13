@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Repositories\Contracts\LogRepositoryInterface;
@@ -12,7 +13,7 @@ class LogService
         $this->logRepository = $logRepository;
     }
 
-    public function createLog(int $userId, string $action, string $description, array $data = null)
+    public function createLog(int $userId, string $action, string $description, ?array $data = null)
     {
         return $this->logRepository->createLog($userId, $action, $description, $data);
     }

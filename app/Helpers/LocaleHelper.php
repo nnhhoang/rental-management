@@ -3,7 +3,6 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Config;
 
 class LocaleHelper
 {
@@ -27,7 +26,7 @@ class LocaleHelper
     /**
      * Check if locale is valid.
      *
-     * @param string $locale
+     * @param  string  $locale
      * @return bool
      */
     public static function isValidLocale($locale)
@@ -43,12 +42,12 @@ class LocaleHelper
     public static function getCurrentLocaleName()
     {
         $locale = App::getLocale();
-        
+
         $names = [
             'en' => 'English',
             'vi' => 'Tiếng Việt',
         ];
-        
+
         return $names[$locale] ?? $locale;
     }
 
@@ -60,12 +59,12 @@ class LocaleHelper
     public static function getCurrentLocaleFlag()
     {
         $locale = App::getLocale();
-        
+
         $flags = [
             'en' => '🇺🇸',
             'vi' => '🇻🇳',
         ];
-        
+
         return $flags[$locale] ?? '';
     }
 }

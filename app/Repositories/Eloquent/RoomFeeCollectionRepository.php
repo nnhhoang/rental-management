@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Eloquent;
 
 use App\Models\RoomFeeCollection;
@@ -14,7 +15,7 @@ class RoomFeeCollectionRepository extends BaseRepository implements RoomFeeColle
 
     /**
      * Get unpaid fees
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUnpaidFees()
@@ -26,8 +27,7 @@ class RoomFeeCollectionRepository extends BaseRepository implements RoomFeeColle
 
     /**
      * Get fees for a specific room
-     * 
-     * @param int $roomId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getFeesByRoom(int $roomId)
@@ -40,9 +40,9 @@ class RoomFeeCollectionRepository extends BaseRepository implements RoomFeeColle
 
     /**
      * Get unpaid fees for a specific month
-     * 
-     * @param int $month
-     * @param int $year
+     *
+     * @param  int  $month
+     * @param  int  $year
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUnpaidFeesByMonth($month, $year)
@@ -56,8 +56,8 @@ class RoomFeeCollectionRepository extends BaseRepository implements RoomFeeColle
 
     /**
      * Get monthly fee statistics for a given year
-     * 
-     * @param int $year
+     *
+     * @param  int  $year
      * @return \Illuminate\Support\Collection
      */
     public function getMonthlyFeeStatistics($year)
@@ -74,11 +74,10 @@ class RoomFeeCollectionRepository extends BaseRepository implements RoomFeeColle
             ->orderBy(DB::raw('MONTH(charge_date)'))
             ->get();
     }
-    
+
     /**
      * Check if a contract has any fee collections
-     * 
-     * @param int $contractId
+     *
      * @return bool
      */
     public function contractHasFeeCollections(int $contractId)

@@ -14,12 +14,10 @@ class Controller extends BaseController
     /**
      * Return success response.
      *
-     * @param mixed $data
-     * @param string|null $message
-     * @param int $code
+     * @param  mixed  $data
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function successResponse($data = null, string $message = null, int $code = 200)
+    protected function successResponse($data = null, ?string $message = null, int $code = 200)
     {
         $response = [
             'status' => 'success',
@@ -36,12 +34,10 @@ class Controller extends BaseController
     /**
      * Return error response.
      *
-     * @param string|null $message
-     * @param mixed $errors
-     * @param int $code
+     * @param  mixed  $errors
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function errorResponse(string $message = null, $errors = null, int $code = 400)
+    protected function errorResponse(?string $message = null, $errors = null, int $code = 400)
     {
         $response = [
             'status' => 'error',

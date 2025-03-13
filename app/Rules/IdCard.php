@@ -14,7 +14,7 @@ class IdCard implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!preg_match('/^[0-9]{9,12}$/', $value)) {
+        if (! preg_match('/^[0-9]{9,12}$/', $value)) {
             $fail(trans('validation.id_card.invalid_format'));
         }
     }

@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\ApartmentRoom;
 use App\Models\Tenant;
 use App\Models\TenantContract;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TenantContractFactory extends Factory
@@ -16,14 +15,14 @@ class TenantContractFactory extends Factory
     {
         $startDate = $this->faker->dateTimeBetween('-2 years', '-1 month');
         $hasEndDate = $this->faker->boolean(30); // 30% chance to have end date (contract ended)
-        $endDate = $hasEndDate 
-            ? $this->faker->dateTimeBetween($startDate, 'now') 
+        $endDate = $hasEndDate
+            ? $this->faker->dateTimeBetween($startDate, 'now')
             : null;
-            
+
         // Get the electricity and water starting numbers
         $electricityStart = $this->faker->numberBetween(100, 1000);
         $waterStart = $this->faker->numberBetween(10, 100);
-            
+
         return [
             'apartment_room_id' => ApartmentRoom::factory(),
             'tenant_id' => Tenant::factory(),
@@ -41,7 +40,7 @@ class TenantContractFactory extends Factory
             'end_date' => $endDate,
         ];
     }
-    
+
     /**
      * Define a state for active contracts
      */
@@ -53,7 +52,7 @@ class TenantContractFactory extends Factory
             ];
         });
     }
-    
+
     /**
      * Define a state for ended contracts
      */

@@ -26,7 +26,7 @@ class TerminateContractRequest extends FormRequest
             'note' => 'nullable|string|max:500',
         ];
     }
-    
+
     /**
      * Prepare the data for validation.
      *
@@ -34,13 +34,13 @@ class TerminateContractRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        if (!$this->filled('end_date')) {
+        if (! $this->filled('end_date')) {
             $this->merge([
-                'end_date' => now()->format('Y-m-d')
+                'end_date' => now()->format('Y-m-d'),
             ]);
         }
-    }    
-    
+    }
+
     /**
      * Get custom attributes for validator errors.
      *

@@ -1,18 +1,22 @@
 <?php
+
 namespace App\Services;
 
+use App\Repositories\Contracts\ElectricityUsageRepositoryInterface;
 use App\Repositories\Contracts\RoomFeeCollectionRepositoryInterface;
 use App\Repositories\Contracts\TenantContractRepositoryInterface;
-use App\Repositories\Contracts\ElectricityUsageRepositoryInterface;
 use App\Repositories\Contracts\WaterUsageRepositoryInterface;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class FeeCollectionService
 {
     protected $feeCollectionRepository;
+
     protected $contractRepository;
+
     protected $electricityRepository;
+
     protected $waterRepository;
 
     public function __construct(
@@ -56,43 +60,45 @@ class FeeCollectionService
     {
         try {
             DB::beginTransaction();
-            
+
             // Check if room has an active contract
             $contract = $this->contractRepository->getActiveContractByRoom($data['apartment_room_id']);
-            
-            if (!$contract) {
+
+            if (! $contract) {
                 DB::rollBack();
+
                 return [
                     'success' => false,
-                    'message' => 'Room does not have an active contract'
+                    'message' => 'Room does not have an active contract',
                 ];
             }
-            
+
             // Set tenant contract and tenant data
             $data['tenant_contract_id'] = $contract->id;
             $data['tenant_id'] = $contract->tenant_id;
-            
+
             // Generate unique ID
             $data['fee_collection_uuid'] = Str::uuid();
-            
+
             // Calculate total debt (if any previous unpaid fees)
             $previousFees = $this->feeCollectionRepository->getFeesByRoom($data['apartment_room_id']);
             $previousDebt = 0;
-            
+
             foreach ($previousFees as $fee) {
                 if ($fee->total_paid < $fee->total_price) {
                     $previousDebt += ($fee->total_price - $fee->total_paid);
                 }
             }
-            
+
             $data['total_debt'] = $previousDebt;
-            
+
             $feeCollection = $this->feeCollectionRepository->create($data);
-            
+
             DB::commit();
+
             return [
                 'success' => true,
-                'feeCollection' => $feeCollection
+                'feeCollection' => $feeCollection,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -109,26 +115,28 @@ class FeeCollectionService
     {
         try {
             DB::beginTransaction();
-            
+
             $feeCollection = $this->feeCollectionRepository->find($feeCollectionId);
-            
-            if (!$feeCollection) {
+
+            if (! $feeCollection) {
                 DB::rollBack();
+
                 return false;
             }
-            
+
             $newTotalPaid = $feeCollection->total_paid + $amount;
-            
+
             // Ensure we don't pay more than the total price
             if ($newTotalPaid > $feeCollection->total_price) {
                 $newTotalPaid = $feeCollection->total_price;
             }
-            
+
             $result = $this->feeCollectionRepository->update($feeCollectionId, [
-                'total_paid' => $newTotalPaid
+                'total_paid' => $newTotalPaid,
             ]);
-            
+
             DB::commit();
+
             return $result;
         } catch (\Exception $e) {
             DB::rollBack();

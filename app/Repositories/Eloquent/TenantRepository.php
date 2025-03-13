@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Eloquent;
 
 use App\Models\Tenant;
@@ -13,7 +14,7 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
 
     /**
      * Get all tenants with their contracts
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getAllWithContracts()
@@ -23,8 +24,8 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
 
     /**
      * Find a tenant by ID with their contracts
-     * 
-     * @param int $id
+     *
+     * @param  int  $id
      * @return \App\Models\Tenant|null
      */
     public function findWithContracts($id)
@@ -34,8 +35,7 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
 
     /**
      * Search tenants by query string
-     * 
-     * @param string $query
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function searchTenants(string $query)
@@ -46,11 +46,10 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
             ->orWhere('email', 'like', "%{$query}%")
             ->get();
     }
-    
+
     /**
      * Search tenants by query string and include their contracts
-     * 
-     * @param string $query
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function searchWithContracts(string $query)
@@ -65,8 +64,7 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
 
     /**
      * Get tenants associated with a user
-     * 
-     * @param int $userId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTenantsByUser(int $userId)
@@ -75,11 +73,10 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
             $query->where('user_id', $userId);
         })->get();
     }
-    
+
     /**
      * Get tenants associated with a user, including their contracts
-     * 
-     * @param int $userId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTenantsByUserWithContracts(int $userId)

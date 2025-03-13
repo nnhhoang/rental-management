@@ -18,19 +18,17 @@ class SetLocale
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
         $locale = $request->header('Accept-Language');
 
-        if (!$locale || !in_array($locale, $this->locales)) {
+        if (! $locale || ! in_array($locale, $this->locales)) {
             $locale = $request->session()->get('locale');
         }
 
-        if (!$locale || !in_array($locale, $this->locales)) {
+        if (! $locale || ! in_array($locale, $this->locales)) {
             $locale = $request->query('locale');
         }
 

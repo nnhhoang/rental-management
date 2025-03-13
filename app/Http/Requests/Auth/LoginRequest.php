@@ -26,7 +26,7 @@ class LoginRequest extends FormRequest
             'password' => 'required|string',
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *
