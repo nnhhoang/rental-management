@@ -6,6 +6,7 @@ use App\Http\Requests\Contract\StoreContractRequest;
 use App\Http\Requests\Contract\TerminateContractRequest;
 use App\Http\Requests\Contract\UpdateContractRequest;
 use App\Http\Resources\TenantContractResource;
+use App\Models\TenantContract;
 use App\Services\ContractService;
 use App\Services\TenantService;
 use Illuminate\Http\Request;
@@ -78,20 +79,15 @@ class ContractController extends BaseController
         
         if (!$result['success']) {
             return $this->errorResponse(
-                $result['message'] ?? trans('messages.contract.active_contract_exists'),
-                null,
+                trans('messages.error'),
                 400
             );
         }
         
-        $message = isset($result['tenant_created']) && $result['tenant_created'] 
-            ? trans('messages.contract.created_with_tenant_successfully')
-            : trans('messages.contract.created_successfully');
-        
         return $this->successResponse(
             new TenantContractResource($result['contract']),
-            $message,
-            201
+            trans('messages.contract.created_successfully'),
+            200
         );
     }
     
@@ -102,11 +98,18 @@ class ContractController extends BaseController
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(UpdateContractRequest $request, $id)
+    public function update(UpdateContractRequest $request, TenantContract $tenantContract)
     {
-        $data = $request->validated();
         
-        $contract = $this->contractService->updateContract($id, $data);
+        $data = $request->validated();
+
+        if($tenantContract->end_date < now()) {
+            return $this->errorResponse(
+                'Contract has been terminated',
+                400
+            );
+        }
+        $contract = $this->contractService->updateContract($tenantContract->id, $data);
         
         if (!$contract) {
             return $this->notFoundResponse(trans('messages.contract.not_found'));

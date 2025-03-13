@@ -28,20 +28,6 @@ class TerminateContractRequest extends FormRequest
     }
     
     /**
-     * Prepare the data for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation()
-    {
-        if (!$this->filled('end_date')) {
-            $this->merge([
-                'end_date' => now()->format('Y-m-d')
-            ]);
-        }
-    }    
-    
-    /**
      * Get custom attributes for validator errors.
      *
      * @return array<string, string>

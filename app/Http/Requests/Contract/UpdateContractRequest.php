@@ -3,10 +3,8 @@
 namespace App\Http\Requests\Contract;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Rules\VietnamesePhoneNumber;
-use App\Rules\VietnameseIdCard;
-use App\Rules\RoomAvailableForContract;
+use App\Rules\PhoneNumber;
+use App\Rules\IdCard;
 
 class UpdateContractRequest extends FormRequest
 {
@@ -26,6 +24,16 @@ class UpdateContractRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'tenant.name' => 'required|string|max:45',
+            'tenant.tel' => [
+                'required',
+                new PhoneNumber
+            ],
+            'tenant.email' => 'required|email|max:256',
+            'tenant.identity_card_number' => [
+                'required',
+                new IdCard
+            ],
             'pay_period' => 'required|integer|in:3,6,12',
             'price' => 'required|numeric|min:0',
             'electricity_pay_type' => 'required|integer|in:1,2,3',
@@ -36,32 +44,10 @@ class UpdateContractRequest extends FormRequest
             'water_number_start' => 'required|integer|min:0',
             'number_of_tenant_current' => 'required|integer|min:1',
             'note' => 'nullable|string',
-            'start_date' => 'required|date|date_format:Y-m-d|before_or_equal:today',
+            'start_date' => 'required|date|date_format:Y-m-d',
             'end_date' => 'required|date|date_format:Y-m-d|after:start_date',
         ];
     }
-    
-    /**
-     * Prepare the data for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation()
-    {
-        $this->mergeDefaultValues();
-    }
-    
-    /**
-     * Merge default values if not provided
-     */
-    protected function mergeDefaultValues()
-    {
-        if (!$this->filled('start_date')) {
-            $this->merge([
-                'start_date' => now()->format('Y-m-d')
-            ]);
-        }
-    }    
     
     /**
      * Get custom attributes for validator errors.
@@ -71,6 +57,10 @@ class UpdateContractRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'tenant.name' => trans('validation.tenant_name'),
+            'tenant.tel' => trans('validation.tel'),
+            'tenant.email' => trans('validation.email'),
+            'tenant.identity_card_number' => trans('validation.identity_card_number'),
             'pay_period' => trans('validation.pay_period'),
             'price' => trans('validation.price'),
             'electricity_pay_type' => trans('validation.electricity_pay_type'),

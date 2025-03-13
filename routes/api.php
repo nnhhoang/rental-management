@@ -87,7 +87,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
         //     Route::delete('/{id}', [ContractController::class, 'destroy']);
         // });
         Route::get('/{id}', [ContractController::class, 'show']);
-        Route::put('/{id}', [ContractController::class, 'update']);
+        Route::put('/{tenantContract}', [ContractController::class, 'update']);
         Route::patch('/{id}/terminate', [ContractController::class, 'terminate']);
         Route::delete('/{id}', [ContractController::class, 'destroy']);
     });
