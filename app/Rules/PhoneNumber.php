@@ -5,7 +5,7 @@ namespace App\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
-class VietnameseIdCard implements ValidationRule
+class PhoneNumber implements ValidationRule
 {
     /**
      * Run the validation rule.
@@ -14,8 +14,8 @@ class VietnameseIdCard implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!preg_match('/^[0-9]{9,12}$/', $value)) {
-            $fail(trans('validation.id_card.invalid_format'));
+        if (!preg_match('/^(0|\+84)([0-9]{9}|[0-9]{10})$/', $value)) {
+            $fail(trans('validation.tel.invalid_format'));
         }
     }
 }
