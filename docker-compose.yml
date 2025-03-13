@@ -39,6 +39,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
     volumes:
       - dbdata:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
 
@@ -48,3 +49,4 @@ networks:
 
 volumes:
   dbdata:
+    driver: local
