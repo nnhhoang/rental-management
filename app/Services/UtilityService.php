@@ -1,16 +1,18 @@
 <?php
+
 namespace App\Services;
 
 use App\Repositories\Contracts\ElectricityUsageRepositoryInterface;
 use App\Repositories\Contracts\WaterUsageRepositoryInterface;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UtilityService
 {
     protected $electricityRepository;
+
     protected $waterRepository;
 
     public function __construct(
@@ -35,17 +37,18 @@ class UtilityService
     {
         try {
             DB::beginTransaction();
-            
+
             $imagePath = null;
-            
+
             if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
                 $imagePath = $this->uploadImage($data['image'], 'electricity');
                 $data['image'] = $imagePath;
             }
-            
+
             $usage = $this->electricityRepository->create($data);
-            
+
             DB::commit();
+
             return $usage;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -71,17 +74,18 @@ class UtilityService
     {
         try {
             DB::beginTransaction();
-            
+
             $imagePath = null;
-            
+
             if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
                 $imagePath = $this->uploadImage($data['image'], 'water');
                 $data['image'] = $imagePath;
             }
-            
+
             $usage = $this->waterRepository->create($data);
-            
+
             DB::commit();
+
             return $usage;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -95,8 +99,9 @@ class UtilityService
 
     private function uploadImage(UploadedFile $file, string $type)
     {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
         $path = $file->storeAs("utilities/{$type}", $filename, 'public');
+
         return $path;
     }
 }

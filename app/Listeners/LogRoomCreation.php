@@ -3,8 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\RoomCreated;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use App\Services\LogService;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,7 +12,7 @@ class LogRoomCreation
      * Create the event listener.
      */
     protected $logService;
-    
+
     public function __construct(LogService $logService)
     {
         $this->logService = $logService;

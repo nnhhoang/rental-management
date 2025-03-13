@@ -2,11 +2,11 @@
 
 namespace App\Rules;
 
+use App\Models\ApartmentRoom;
+use App\Models\TenantContract;
+use Carbon\Carbon;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use App\Models\TenantContract;
-use App\Models\ApartmentRoom;
-use Carbon\Carbon;
 
 class RoomAvailableForContract implements ValidationRule
 {
@@ -24,13 +24,15 @@ class RoomAvailableForContract implements ValidationRule
     {
 
         $room = ApartmentRoom::find($value);
-        if (!$room) {
+        if (! $room) {
             $fail(trans('messages.room.not_found'));
+
             return;
         }
 
         if ($room->apartment && $room->apartment->user_id !== auth()->id()) {
             $fail(trans('messages.room.no_permission'));
+
             return;
         }
 
@@ -38,7 +40,7 @@ class RoomAvailableForContract implements ValidationRule
         if ($existingContract) {
             $fail(trans('messages.contract.time_overlap', [
                 'start' => $existingContract->start_date->format('Y-m-d'),
-                'end' => $existingContract->end_date ? $existingContract->end_date->format('Y-m-d') : trans('messages.contract.ongoing')
+                'end' => $existingContract->end_date ? $existingContract->end_date->format('Y-m-d') : trans('messages.contract.ongoing'),
             ]));
         }
     }
@@ -49,7 +51,7 @@ class RoomAvailableForContract implements ValidationRule
     protected function findActiveContract(int $roomId)
     {
         return TenantContract::where('apartment_room_id', $roomId)
-            ->where('end_date', '>=', $this->startDate) 
+            ->where('end_date', '>=', $this->startDate)
             ->first();
     }
 }

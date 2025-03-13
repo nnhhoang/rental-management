@@ -1,0 +1,85 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, dom, fileinfo, pdo_mysql, bcmath, opcache, intl, gd, zip
+        coverage: none
+
+    - name: Get Composer Cache Directory
+      id: composer-cache
+      run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install Dependencies
+      run: composer install --no-dev --prefer-dist --no-interaction --no-progress
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Cache npm dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: ${{ runner.os }}-node-
+
+    - name: Install npm dependencies
+      run: npm ci
+
+    - name: Build assets
+      run: npm run build
+
+    - name: Generate .env file
+      run: |
+        cp .env.production.example .env
+        sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env
+        sed -i "s/APP_KEY=.*/APP_KEY=${{ secrets.APP_KEY }}/" .env
+        sed -i "s/APP_URL=.*/APP_URL=https:\/\/${{ secrets.EC2_HOST }}/" .env
+        sed -i "s/APP_ENV=.*/APP_ENV=production/" .env
+        sed -i "s/APP_DEBUG=.*/APP_DEBUG=false/" .env
+
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to EC2
+      run: |
+        rsync -avz --exclude='.git/' \
+                  --exclude='.github/' \
+                  --exclude='node_modules/' \
+                  --exclude='tests/' \
+                  --exclude='docker-compose.yml' \
+                  --exclude='Dockerfile' \
+                  --exclude='.env.example' \
+                  . ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/rental-app
+
+    - name: Execute deployment script on server
+      run: |
+        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} 'cd /var/www/rental-app && bash deploy-ec2.sh'

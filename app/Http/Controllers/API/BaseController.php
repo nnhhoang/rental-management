@@ -10,12 +10,9 @@ class BaseController extends Controller
     /**
      * Return success response.
      *
-     * @param mixed $data
-     * @param string|null $message
-     * @param int $code
-     * @return JsonResponse
+     * @param  mixed  $data
      */
-    protected function successResponse($data = null, string $message = null, int $code = 200): JsonResponse
+    protected function successResponse($data = null, ?string $message = null, int $code = 200): JsonResponse
     {
         $response = [
             'status' => 'success',
@@ -32,12 +29,9 @@ class BaseController extends Controller
     /**
      * Return error response.
      *
-     * @param string|null $message
-     * @param mixed $errors
-     * @param int $code
-     * @return JsonResponse
+     * @param  mixed  $errors
      */
-    protected function errorResponse(string $message = null, $errors = null, int $code = 400): JsonResponse
+    protected function errorResponse(?string $message = null, $errors = null, int $code = 400): JsonResponse
     {
         $response = [
             'status' => 'error',
@@ -54,11 +48,9 @@ class BaseController extends Controller
     /**
      * Return validation error response.
      *
-     * @param mixed $errors
-     * @param string|null $message
-     * @return JsonResponse
+     * @param  mixed  $errors
      */
-    protected function validationErrorResponse($errors, string $message = null): JsonResponse
+    protected function validationErrorResponse($errors, ?string $message = null): JsonResponse
     {
         return $this->errorResponse(
             $message ?? trans('validation.validation_failed'),
@@ -69,11 +61,8 @@ class BaseController extends Controller
 
     /**
      * Return not found response.
-     *
-     * @param string|null $message
-     * @return JsonResponse
      */
-    protected function notFoundResponse(string $message = null): JsonResponse
+    protected function notFoundResponse(?string $message = null): JsonResponse
     {
         return $this->errorResponse(
             $message ?? trans('messages.not_found'),
@@ -84,11 +73,8 @@ class BaseController extends Controller
 
     /**
      * Return unauthorized response.
-     *
-     * @param string|null $message
-     * @return JsonResponse
      */
-    protected function unauthorizedResponse(string $message = null): JsonResponse
+    protected function unauthorizedResponse(?string $message = null): JsonResponse
     {
         return $this->errorResponse(
             $message ?? trans('messages.unauthorized'),
@@ -99,11 +85,8 @@ class BaseController extends Controller
 
     /**
      * Return forbidden response.
-     *
-     * @param string|null $message
-     * @return JsonResponse
      */
-    protected function forbiddenResponse(string $message = null): JsonResponse
+    protected function forbiddenResponse(?string $message = null): JsonResponse
     {
         return $this->errorResponse(
             $message ?? trans('messages.forbidden'),

@@ -25,7 +25,7 @@ class RecordPaymentRequest extends FormRequest
             'amount' => 'required|numeric|min:0',
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

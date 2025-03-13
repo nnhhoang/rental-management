@@ -8,7 +8,7 @@ return [
     'unauthorized' => 'Chưa đăng nhập!',
     'forbidden' => 'Không có quyền truy cập!',
     'locale_changed' => 'Đã thay đổi ngôn ngữ thành công',
-    
+
     // Authentication messages
     'auth' => [
         'registered' => 'Đăng ký người dùng thành công',
@@ -18,7 +18,7 @@ return [
         'password_reset_link_sent' => 'Đường dẫn đặt lại mật khẩu đã được gửi tới email của bạn',
         'password_reset_success' => 'Đặt lại mật khẩu thành công',
     ],
-    
+
     // Apartment messages
     'apartment' => [
         'created_successfully' => 'Tạo chung cư thành công',
@@ -27,7 +27,7 @@ return [
         'not_found' => 'Không tìm thấy chung cư',
         'no_permission' => 'Bạn không có quyền truy cập chung cư này',
     ],
-    
+
     // Room messages
     'room' => [
         'created_successfully' => 'Tạo phòng thành công',
@@ -36,7 +36,7 @@ return [
         'not_found' => 'Không tìm thấy phòng',
         'no_permission' => 'Bạn không có quyền truy cập phòng này',
     ],
-    
+
     // Tenant messages
     'tenant' => [
         'created_successfully' => 'Tạo người thuê thành công',
@@ -44,7 +44,7 @@ return [
         'deleted_successfully' => 'Xóa người thuê thành công',
         'not_found' => 'Không tìm thấy người thuê',
     ],
-    
+
     // Contract messages
     'contract' => [
         'created_successfully' => 'Tạo hợp đồng thành công',
@@ -56,7 +56,7 @@ return [
         'active_contract_exists' => 'Phòng đã có hợp đồng đang hoạt động',
         'no_active_contract' => 'Không tìm thấy hợp đồng đang hoạt động cho phòng này',
     ],
-    
+
     // Fee messages
     'fee' => [
         'created_successfully' => 'Tạo phí thành công',
@@ -66,7 +66,7 @@ return [
         'not_found' => 'Không tìm thấy phí',
         'no_permission' => 'Bạn không có quyền truy cập phí này',
     ],
-    
+
     // Utility messages
     'utility' => [
         'created_successfully' => 'Ghi nhận lượng sử dụng thành công',

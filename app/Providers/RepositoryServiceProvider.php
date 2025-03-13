@@ -2,29 +2,27 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-
-// Repositories
-use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\ApartmentRepositoryInterface;
+// Repositories
 use App\Repositories\Contracts\ApartmentRoomRepositoryInterface;
-use App\Repositories\Contracts\TenantRepositoryInterface;
-use App\Repositories\Contracts\TenantContractRepositoryInterface;
-use App\Repositories\Contracts\RoomFeeCollectionRepositoryInterface;
 use App\Repositories\Contracts\ElectricityUsageRepositoryInterface;
-use App\Repositories\Contracts\WaterUsageRepositoryInterface;
 use App\Repositories\Contracts\LogRepositoryInterface;
-
-// Implementations
-use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Contracts\RoomFeeCollectionRepositoryInterface;
+use App\Repositories\Contracts\TenantContractRepositoryInterface;
+use App\Repositories\Contracts\TenantRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\WaterUsageRepositoryInterface;
 use App\Repositories\Eloquent\ApartmentRepository;
+// Implementations
 use App\Repositories\Eloquent\ApartmentRoomRepository;
-use App\Repositories\Eloquent\TenantRepository;
-use App\Repositories\Eloquent\TenantContractRepository;
-use App\Repositories\Eloquent\RoomFeeCollectionRepository;
 use App\Repositories\Eloquent\ElectricityUsageRepository;
-use App\Repositories\Eloquent\WaterUsageRepository;
 use App\Repositories\Eloquent\LogRepository;
+use App\Repositories\Eloquent\RoomFeeCollectionRepository;
+use App\Repositories\Eloquent\TenantContractRepository;
+use App\Repositories\Eloquent\TenantRepository;
+use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Eloquent\WaterUsageRepository;
+use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
 {

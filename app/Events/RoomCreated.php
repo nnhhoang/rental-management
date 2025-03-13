@@ -2,14 +2,11 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
+use App\Models\ApartmentRoom;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\ApartmentRoom;
 
 class RoomCreated
 {
@@ -18,7 +15,6 @@ class RoomCreated
     /**
      * Create a new event instance.
      */
-
     public $room;
 
     public function __construct(ApartmentRoom $room)

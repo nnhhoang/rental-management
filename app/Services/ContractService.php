@@ -1,17 +1,22 @@
 <?php
+
 namespace App\Services;
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use App\Repositories\Contracts\TenantContractRepositoryInterface;
 use App\Repositories\Contracts\ApartmentRoomRepositoryInterface;
 use App\Repositories\Contracts\RoomFeeCollectionRepositoryInterface;
+use App\Repositories\Contracts\TenantContractRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
-class ContractService {
+class ContractService
+{
     protected $contractRepository;
+
     protected $roomRepository;
+
     protected $feeCollectionRepository;
+
     protected $tenantRepository;
 
     public function __construct(
@@ -28,7 +33,7 @@ class ContractService {
 
     /**
      * Get all contracts
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getAllContracts()
@@ -38,8 +43,7 @@ class ContractService {
 
     /**
      * Get contracts with filters
-     * 
-     * @param array $filters
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getFilteredContracts(array $filters)
@@ -47,26 +51,25 @@ class ContractService {
         if (isset($filters['active']) && $filters['active']) {
             return $this->contractRepository->getActiveContracts();
         }
-        
+
         if (isset($filters['tenant_id']) && $filters['tenant_id']) {
             return $this->getContractHistory($filters['tenant_id']);
         }
-        
+
         if (isset($filters['room_id']) && $filters['room_id']) {
             return $this->contractRepository->getContractsByRoom($filters['room_id']);
         }
-        
+
         if (isset($filters['apartment_id']) && $filters['apartment_id']) {
             return $this->contractRepository->getContractsByApartment($filters['apartment_id']);
         }
-        
+
         return $this->contractRepository->all();
     }
 
     /**
      * Get a specific contract
-     * 
-     * @param int $id
+     *
      * @return \App\Models\TenantContract|null
      */
     public function getContract(int $id)
@@ -76,7 +79,7 @@ class ContractService {
 
     /**
      * Get active contracts
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getActiveContracts()
@@ -86,8 +89,7 @@ class ContractService {
 
     /**
      * Get active contract by room
-     * 
-     * @param int $roomId
+     *
      * @return \App\Models\TenantContract|null
      */
     public function getActiveContractByRoom(int $roomId)
@@ -97,8 +99,7 @@ class ContractService {
 
     /**
      * Get contract history for a tenant
-     * 
-     * @param int $tenantId
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getContractHistory(int $tenantId)
@@ -108,8 +109,7 @@ class ContractService {
 
     /**
      * Check if tenant has active contracts
-     * 
-     * @param int $tenantId
+     *
      * @return bool
      */
     public function tenantHasActiveContracts(int $tenantId)
@@ -119,8 +119,7 @@ class ContractService {
 
     /**
      * Check if contract has fee collections
-     * 
-     * @param int $contractId
+     *
      * @return bool
      */
     public function contractHasFeeCollections(int $contractId)
@@ -130,31 +129,29 @@ class ContractService {
 
     /**
      * Create a new contract
-     * 
-     * @param array $data
+     *
      * @return array
      */
     public function createContract(array $data)
     {
         DB::beginTransaction();
-    
+
         try {
             $tenantId = $data['tenant_id'] ?? null;
-    
-                $tenantData = [
-                    'name' => $data['name'],
-                    'tel' => $data['tel'],
-                    'email' => $data['email'] ?? null,
-                    'identity_card_number' => $data['identity_card_number'],
-                ];
-    
-                $tenant =  $this->tenantRepository->create($tenantData);
-                $tenantId = $tenant->id;
 
-            $startDate = !empty($data['start_date']) ? Carbon::parse($data['start_date']) : now();
+            $tenantData = [
+                'name' => $data['name'],
+                'tel' => $data['tel'],
+                'email' => $data['email'] ?? null,
+                'identity_card_number' => $data['identity_card_number'],
+            ];
+
+            $tenant = $this->tenantRepository->create($tenantData);
+            $tenantId = $tenant->id;
+
+            $startDate = ! empty($data['start_date']) ? Carbon::parse($data['start_date']) : now();
 
             $endDate = Carbon::parse($data['end_date']);
-
 
             $contractData = [
                 'apartment_room_id' => $data['apartment_room_id'],
@@ -172,30 +169,29 @@ class ContractService {
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ];
-    
+
             $contract = $this->contractRepository->create($contractData);
-    
+
             DB::commit();
-    
+
             return [
                 'success' => true,
                 'contract' => $contract,
-                'tenant_created' => !empty($data['is_create_tenant'])
+                'tenant_created' => ! empty($data['is_create_tenant']),
             ];
         } catch (\Exception $e) {
             DB::rollBack();
+
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
             ];
         }
-    }    
-    
+    }
+
     /**
      * Update a contract
-     * 
-     * @param int $id
-     * @param array $data
+     *
      * @return \App\Models\TenantContract|bool
      */
     public function updateContract(int $id, array $data)
@@ -205,24 +201,22 @@ class ContractService {
 
     /**
      * Terminate a contract
-     * 
-     * @param int $id
-     * @param mixed $endDate
+     *
+     * @param  mixed  $endDate
      * @return \App\Models\TenantContract|bool
      */
     public function terminateContract(int $id, $endDate = null)
     {
         $endDate = $endDate ?: now();
-        
+
         return $this->contractRepository->update($id, [
-            'end_date' => $endDate
+            'end_date' => $endDate,
         ]);
     }
 
     /**
      * Delete a contract
-     * 
-     * @param int $id
+     *
      * @return bool
      */
     public function deleteContract(int $id)

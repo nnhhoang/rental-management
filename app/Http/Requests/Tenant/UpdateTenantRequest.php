@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Tenant;
 
-use Illuminate\Foundation\Http\FormRequest;
-use App\Rules\VietnamesePhoneNumber;
 use App\Rules\VietnameseIdCard;
+use App\Rules\VietnamesePhoneNumber;
+use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTenantRequest extends FormRequest
 {
@@ -30,7 +30,7 @@ class UpdateTenantRequest extends FormRequest
             'identity_card_number' => ['required', 'string', 'max:45', new VietnameseIdCard],
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Eloquent;
 
 use App\Repositories\Contracts\BaseRepositoryInterface;
@@ -34,6 +35,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
         foreach ($criteria as $key => $value) {
             $query->where($key, $value);
         }
+
         return $query->get();
     }
 
@@ -47,8 +49,10 @@ abstract class BaseRepository implements BaseRepositoryInterface
         $model = $this->find($id);
         if ($model) {
             $model->update($attributes);
+
             return $model;
         }
+
         return false;
     }
 
@@ -58,6 +62,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
         if ($model) {
             return $model->delete();
         }
+
         return false;
     }
 

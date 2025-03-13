@@ -136,7 +136,7 @@ return [
         'email' => 'địa chỉ email',
         'password' => 'mật khẩu',
         'password_confirmation' => 'xác nhận mật khẩu',
-        
+
         // Apartment attributes
         'apartment_id' => 'chung cư',
         'address' => 'địa chỉ',
@@ -144,17 +144,17 @@ return [
         'district_id' => 'quận/huyện',
         'ward_id' => 'phường/xã',
         'image' => 'hình ảnh',
-        
+
         // Room attributes
         'room_number' => 'số phòng',
         'default_price' => 'giá mặc định',
         'max_tenant' => 'số người tối đa',
-        
+
         // Tenant attributes
         'tenant_id' => 'người thuê',
         'tel' => 'số điện thoại',
         'identity_card_number' => 'số CMND/CCCD',
-        
+
         // Contract attributes
         'tenant_contract_id' => 'hợp đồng',
         'pay_period' => 'kỳ thanh toán',
@@ -169,7 +169,7 @@ return [
         'note' => 'ghi chú',
         'start_date' => 'ngày bắt đầu',
         'end_date' => 'ngày kết thúc',
-        
+
         // Fee attributes
         'electricity_number_before' => 'chỉ số điện trước',
         'electricity_number_after' => 'chỉ số điện hiện tại',
@@ -179,12 +179,12 @@ return [
         'total_price' => 'tổng tiền',
         'total_paid' => 'số tiền đã thanh toán',
         'amount' => 'số tiền',
-        
+
         // Utility attributes
         'usage_number' => 'chỉ số sử dụng',
         'input_date' => 'ngày nhập',
     ],
-    
+
     // Custom validation messages
     'custom' => [
         'apartment' => [

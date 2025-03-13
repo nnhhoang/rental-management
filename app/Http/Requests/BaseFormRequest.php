@@ -33,7 +33,7 @@ class BaseFormRequest extends FormRequest
     {
         return [];
     }
-    
+
     /**
      * Get the validator instance for the request.
      *
@@ -42,14 +42,14 @@ class BaseFormRequest extends FormRequest
     protected function getValidatorInstance()
     {
         $validator = parent::getValidatorInstance();
-        
+
         // Add after-hook to validator for logging or additional processing if needed
         $validator->after(function ($validator) {
             if ($validator->failed()) {
                 // You can log validation failures here if needed
             }
         });
-        
+
         return $validator;
     }
 }

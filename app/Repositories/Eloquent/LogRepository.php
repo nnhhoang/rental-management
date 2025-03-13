@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Eloquent;
 
 use App\Models\Log;
@@ -12,7 +13,7 @@ class LogRepository extends BaseRepository implements LogRepositoryInterface
         parent::__construct($model);
     }
 
-    public function createLog(int $userId, string $action, string $description, array $data = null)
+    public function createLog(int $userId, string $action, string $description, ?array $data = null)
     {
         return $this->model->create([
             'user_id' => $userId,

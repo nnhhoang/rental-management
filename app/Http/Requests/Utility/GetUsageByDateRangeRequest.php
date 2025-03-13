@@ -26,7 +26,7 @@ class GetUsageByDateRangeRequest extends FormRequest
             'end_date' => 'required|date|after_or_equal:start_date',
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

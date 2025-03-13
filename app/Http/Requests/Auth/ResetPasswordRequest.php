@@ -28,7 +28,7 @@ class ResetPasswordRequest extends FormRequest
             'password' => ['required', 'confirmed', Password::defaults()],
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

@@ -18,7 +18,7 @@ class StatisticsController extends BaseController
     public function unpaidRooms()
     {
         $unpaidRooms = $this->statisticsService->getUnpaidRoomsForPreviousMonth();
-        
+
         return $this->successResponse(
             RoomFeeCollectionResource::collection($unpaidRooms)
         );
@@ -27,19 +27,19 @@ class StatisticsController extends BaseController
     public function monthlyFeeStatistics(Request $request)
     {
         $year = $request->query('year', date('Y'));
-        
+
         $statistics = $this->statisticsService->getMonthlyFeeStatistics($year);
-        
+
         return $this->successResponse([
             'data' => $statistics,
-            'year' => $year
+            'year' => $year,
         ]);
     }
 
     public function dashboard()
     {
         $userId = auth()->id();
-        
+
         $data = [
             'total_apartments' => $this->statisticsService->getTotalApartments($userId),
             'total_rooms' => $this->statisticsService->getTotalRooms($userId),
@@ -47,7 +47,7 @@ class StatisticsController extends BaseController
             'occupancy_rate' => $this->statisticsService->getOccupancyRate(),
             'income_statistics' => $this->statisticsService->getIncomeStatistics(date('Y')),
         ];
-        
+
         return $this->successResponse($data);
     }
 }

@@ -3,10 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\UnpaidFeeNotification;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use App\Services\LogService;
-use Illuminate\Support\Facades\Auth;
 
 class LogUnpaidFeeNotification
 {
