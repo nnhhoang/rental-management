@@ -1,29 +1,41 @@
 FROM php:8.2-fpm
 
-WORKDIR /var/www/html
-
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
-    zip unzip git curl libzip-dev libonig-dev libicu-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
 
-RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath opcache \
-    && docker-php-ext-configure intl && docker-php-ext-install intl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install gd
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+# Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN groupadd -g 1000 www && useradd -u 1000 -ms /bin/bash -g www www
+# Set working directory
+WORKDIR /var/www/html
 
+# Copy existing application directory contents
 COPY . /var/www/html
-COPY --chown=www:www . /var/www/html
+
+# Copy existing application directory permissions
+COPY --chown=www-data:www-data . /var/www/html
+
+# Set permissions
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-USER www
+# Install dependencies
+RUN composer install --no-interaction --no-dev --optimize-autoloader
 
+# Expose port 9000
 EXPOSE 9000
 
+# Start PHP-FPM server
 CMD ["php-fpm"]
