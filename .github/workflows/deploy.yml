@@ -1,85 +1,178 @@
 name: Deploy to AWS EC2
-
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-
+        
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
         extensions: mbstring, dom, fileinfo, pdo_mysql, bcmath, opcache, intl, gd, zip
         coverage: none
-
+        
     - name: Get Composer Cache Directory
       id: composer-cache
-      run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
     - name: Cache Composer dependencies
       uses: actions/cache@v3
       with:
         path: ${{ steps.composer-cache.outputs.dir }}
         key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
         restore-keys: ${{ runner.os }}-composer-
-
+        
     - name: Install Dependencies
       run: composer install --no-dev --prefer-dist --no-interaction --no-progress
-
+      
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-
+        
     - name: Cache npm dependencies
       uses: actions/cache@v3
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: ${{ runner.os }}-node-
-
+        
     - name: Install npm dependencies
       run: npm ci
-
+      
     - name: Build assets
       run: npm run build
-
+      
     - name: Generate .env file
       run: |
         cp .env.production.example .env
         sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env
-        sed -i "s/APP_KEY=.*/APP_KEY=${{ secrets.APP_KEY }}/" .env
-        sed -i "s/APP_URL=.*/APP_URL=https:\/\/${{ secrets.EC2_HOST }}/" .env
+        sed -i "s/DB_USERNAME=.*/DB_USERNAME=root/" .env
+        sed -i "s/APP_URL=.*/APP_URL=http:\/\/${{ secrets.EC2_HOST }}:8080/" .env
         sed -i "s/APP_ENV=.*/APP_ENV=production/" .env
         sed -i "s/APP_DEBUG=.*/APP_DEBUG=false/" .env
-
-    - name: Configure SSH
+        
+    - name: Create docker-compose.yml
+      run: |
+        cat > docker-compose.yml << 'EOF'
+        services:
+          app:
+            build: .
+            volumes:
+              - ./:/var/www/html
+            depends_on:
+              - db
+            networks:
+              - app-network
+        
+          webserver:
+            image: nginx:alpine
+            ports:
+              - "8080:80"
+            volumes:
+              - ./:/var/www/html
+              - ./nginx/conf.d:/etc/nginx/conf.d
+            depends_on:
+              - app
+            networks:
+              - app-network
+        
+          db:
+            image: mysql:8.0
+            environment:
+              MYSQL_DATABASE: rental_management
+              MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+            networks:
+              - app-network
+        
+        networks:
+          app-network:
+            driver: bridge
+        EOF
+        
+    - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Deploy to EC2
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+        chmod 600 ~/.ssh/ec2_key.pem
+        cat >> ~/.ssh/config << EOF
+        Host ec2
+          HostName ${{ secrets.EC2_HOST }}
+          User ubuntu
+          IdentityFile ~/.ssh/ec2_key.pem
+          StrictHostKeyChecking no
+        EOF
+        
+    - name: Create Nginx configuration
       run: |
-        rsync -avz --exclude='.git/' \
-                  --exclude='.github/' \
-                  --exclude='node_modules/' \
-                  --exclude='tests/' \
-                  --exclude='docker-compose.yml' \
-                  --exclude='Dockerfile' \
-                  --exclude='.env.example' \
-                  . ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/rental-app
-
-    - name: Execute deployment script on server
+        mkdir -p nginx/conf.d
+        cat > nginx/conf.d/nginx.conf << 'EOF'
+        server {
+            listen 80;
+            server_name _;
+            root /var/www/html/public;
+            index index.php;
+        
+            location / {
+                try_files $uri $uri/ /index.php?$query_string;
+            }
+        
+            location ~ \.php$ {
+                fastcgi_pass app:9000;
+                fastcgi_index index.php;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                include fastcgi_params;
+            }
+        }
+        EOF
+        
+    - name: Create deployment script
       run: |
-        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} 'cd /var/www/rental-app && bash deploy-ec2.sh'
+        cat > deploy-ec2.sh << 'EOF'
+        #!/bin/bash
+        set -e
+        
+        # Update and install dependencies
+        sudo apt update
+        
+        # Stop and remove existing containers if any
+        docker-compose -f docker-compose.yml down || true
+        
+        # Start database first and wait for it to initialize
+        docker-compose -f docker-compose.yml up -d db
+        echo "Waiting 30 seconds for database to initialize..."
+        sleep 30
+        
+        # Start the rest of the containers
+        docker-compose -f docker-compose.yml up -d app webserver
+        
+        # Run database migrations
+        docker-compose -f docker-compose.yml exec -T app php artisan migrate --force
+        
+        # Generate APP_KEY if not exists
+        docker-compose -f docker-compose.yml exec -T app php artisan key:generate --force
+        
+        # Optimize the application
+        docker-compose -f docker-compose.yml exec -T app php artisan config:cache
+        docker-compose -f docker-compose.yml exec -T app php artisan route:cache
+        docker-compose -f docker-compose.yml exec -T app php artisan view:cache
+        docker-compose -f docker-compose.yml exec -T app php artisan storage:link
+        docker-compose -f docker-compose.yml exec -T app chmod -R 775 storage bootstrap/cache
+        
+        echo "Deployment complete!"
+        EOF
+        chmod +x deploy-ec2.sh
+        
+    - name: Rsync to EC2
+      run: |
+        rsync -avz --exclude=".git" --exclude="node_modules" --exclude="vendor" ./ ec2:/var/www/rental-app/
+        
+    - name: Run deployment script
+      run: ssh ec2 "cd /var/www/rental-app && chmod +x deploy-ec2.sh && ./deploy-ec2.sh"

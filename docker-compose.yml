@@ -1,12 +1,15 @@
 version: '3'
 services:
   app:
-    build: .
-    container_name: rental_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rental-app
+    container_name: rental-app
     restart: unless-stopped
+    working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - app-network
     depends_on:
@@ -14,15 +17,14 @@ services:
 
   webserver:
     image: nginx:alpine
-    container_name: rental_webserver
+    container_name: rental-app-webserver
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./:/var/www/html
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - app-network
     depends_on:
@@ -30,16 +32,15 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: rental_db
+    container_name: rental-app-db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
     volumes:
       - dbdata:/var/lib/mysql
-      - ./mysql/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
 
