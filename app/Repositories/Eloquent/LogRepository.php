@@ -39,4 +39,13 @@ class LogRepository extends BaseRepository implements LogRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->get();
     }
+
+    public function getRecentLogs($limit = 10)
+    {
+        return $this->model
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
 }

@@ -42,10 +42,16 @@ class StoreContractRequest extends FormRequest
                 'required_if:is_create_tenant,true',
                 new PhoneNumber
             ],
-            'email' => 'required_if:is_create_tenant,true|email|max:256',
+            'email' => [
+                'required_if:is_create_tenant,true',
+                'email',
+                'max:256',
+                'unique:tenants,email',
+            ],
             'identity_card_number' => [
                 'required_if:is_create_tenant,true',
-                new IdCard
+                new IdCard,
+                'unique:tenants,identity_card_number',
             ],
             'pay_period' => 'required|integer|in:3,6,12',
             'price' => 'required|numeric|min:0',

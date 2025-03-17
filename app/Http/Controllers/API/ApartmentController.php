@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Apartment\StoreApartmentRequest;
 use App\Http\Requests\Apartment\UpdateApartmentRequest;
 use App\Http\Resources\ApartmentResource;
+use App\Models\Apartment;
 use App\Services\ApartmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -21,13 +22,16 @@ class ApartmentController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Apartment::class);
+
         $perPage = $request->query('per_page', 15);
         $search = $request->query('search');
+        $userId = auth()->id();
         
         if ($search) {
-            $apartments = $this->apartmentService->searchApartments($search, $perPage);
+            $apartments = $this->apartmentService->searchApartments($search, $perPage, $userId);
         } else {
-            $apartments = $this->apartmentService->getAllApartments($perPage);
+            $apartments = $this->apartmentService->getUserApartments($userId, $perPage);
         }
         
         return ApartmentResource::collection($apartments);
@@ -36,12 +40,21 @@ class ApartmentController extends Controller
     public function show($id)
     {
         $apartment = $this->apartmentService->getApartment($id);
+
+        if (!$apartment) {
+            return $this->notFoundResponse(trans('messages.apartment.not_found'));
+        }
+
+        $this->authorize('view', $apartment);
         
-        return new ApartmentResource($apartment);
+        return $this->successResponse(
+            new ApartmentResource($apartment)
+        );
     }
 
     public function store(StoreApartmentRequest $request)
     {
+        $this->authorize('create', Apartment::class);
         $data = $request->validated();
         $data['user_id'] = auth()->id();
         
@@ -55,6 +68,14 @@ class ApartmentController extends Controller
 
     public function update(UpdateApartmentRequest $request, $id)
     {
+        $apartment = $this->apartmentService->getApartment($id);
+
+        if (!$apartment) {
+            return $this->notFoundResponse(trans('messages.apartment.not_found'));
+        }
+
+        $this->authorize('update', $apartment);
+
         $data = $request->validated();
         
         $apartment = $this->apartmentService->updateApartment($id, $data);
@@ -67,7 +88,13 @@ class ApartmentController extends Controller
 
     public function destroy($id)
     {
-        $this->apartmentService->deleteApartment($id);
+        $apartment = $this->apartmentService->getApartment($id);
+    
+        if (!$apartment) {
+            return $this->notFoundResponse(trans('messages.apartment.not_found'));
+        }
+
+        $this->authorize('delete', $apartment);
         
         return response()->json([
             'message' => trans('messages.apartment.deleted_successfully')
@@ -76,6 +103,8 @@ class ApartmentController extends Controller
 
     public function userApartments()
     {
+        $this->authorize('viewAny', Apartment::class);
+        
         $apartments = $this->apartmentService->getUserApartments(auth()->id());
         
         return ApartmentResource::collection($apartments);

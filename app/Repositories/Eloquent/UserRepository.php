@@ -15,4 +15,11 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
     {
         return $this->model->where('email', $email)->first();
     }
+
+    public function searchUsers($search, $perPage)
+    {
+        return User::where('name', 'LIKE', "%{$search}%")
+            ->orWhere('email', 'LIKE', "%{$search}%")
+            ->paginate($perPage);
+    }
 }

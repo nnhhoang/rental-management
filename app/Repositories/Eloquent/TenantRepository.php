@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Eloquent;
 
 use App\Models\Tenant;
@@ -46,7 +47,7 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
             ->orWhere('email', 'like', "%{$query}%")
             ->get();
     }
-    
+
     /**
      * Search tenants by query string and include their contracts
      * 
@@ -63,6 +64,19 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
             ->get();
     }
 
+    public function getTenantsByUserPaginated(int $userId, $withContracts = false, $perPage = 15)
+    {
+        $query = $this->model->whereHas('contracts.room.apartment', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        });
+
+        if ($withContracts) {
+            $query->with('contracts');
+        }
+
+        return $query->paginate($perPage);
+    }
+
     /**
      * Get tenants associated with a user
      * 
@@ -75,7 +89,7 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
             $query->where('user_id', $userId);
         })->get();
     }
-    
+
     /**
      * Get tenants associated with a user, including their contracts
      * 
@@ -90,5 +104,32 @@ class TenantRepository extends BaseRepository implements TenantRepositoryInterfa
                 $query->where('user_id', $userId);
             })
             ->get();
+    }
+
+    public function findByEmailOrIdCard(string $email, string $idCardNumber)
+    {
+        return $this->model
+            ->where('email', $email)
+            ->orWhere('identity_card_number', $idCardNumber)
+            ->first();
+    }
+
+    public function searchTenantsByUser(int $userId, $search, $withContracts = false, $perPage = 15)
+    {
+        $query = $this->model
+            ->whereHas('contracts.room.apartment', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('tel', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+
+        if ($withContracts) {
+            $query->with('contracts');
+        }
+
+        return $query->paginate($perPage);
     }
 }

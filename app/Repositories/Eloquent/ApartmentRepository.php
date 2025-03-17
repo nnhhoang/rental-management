@@ -11,16 +11,29 @@ class ApartmentRepository extends BaseRepository implements ApartmentRepositoryI
         parent::__construct($model);
     }
 
-    public function searchApartments(string $query, int $perPage = 15)
+    public function searchApartments(string $query, int $perPage = 15, ?int $userId = null)
     {
-        return $this->model
-            ->where('name', 'like', "%{$query}%")
-            ->orWhere('address', 'like', "%{$query}%")
-            ->paginate($perPage);
+        $queryBuilder = $this->model->newQuery()
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('address', 'like', "%{$query}%");
+            });
+
+        if ($userId) {
+            $queryBuilder->where('user_id', $userId);
+        }
+        
+        return $queryBuilder->paginate($perPage);
     }
 
-    public function getByUser(int $userId)
+    public function getByUser(int $userId, int $perPage = null)
     {
-        return $this->model->where('user_id', $userId)->get();
+        $query = $this->model->where('user_id', $userId);
+        
+        if ($perPage) {
+            return $query->paginate($perPage);
+        }
+        
+        return $query->get();
     }
 }

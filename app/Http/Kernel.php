@@ -67,13 +67,8 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        
-        // Custom middleware
-        'check.apartment.ownership' => \App\Http\Middleware\CheckApartmentOwnership::class,
-        'check.room.ownership' => \App\Http\Middleware\CheckRoomOwnership::class,
-        'check.contract.ownership' => \App\Http\Middleware\CheckContractOwnership::class,
-        'check.fee.ownership' => \App\Http\Middleware\CheckFeeOwnership::class,
-        'set.locale' => \App\Http\Middleware\SetLocale::class, // Add alias for the locale middleware
+        'auth.multi' => \App\Http\Middleware\CheckUserOrAdmin::class,
+        'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
     ];
 
     /**

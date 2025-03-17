@@ -49,4 +49,6 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTenantsByUserWithContracts(int $userId);
+    
+    public function findByEmailOrIdCard(string $email, string $idCardNumber);
 }

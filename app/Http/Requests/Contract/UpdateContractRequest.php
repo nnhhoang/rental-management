@@ -24,13 +24,13 @@ class UpdateContractRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tenant.name' => 'required|string|max:45',
-            'tenant.tel' => [
+            'name' => 'required|string|max:45',
+            'tel' => [
                 'required',
                 new PhoneNumber
             ],
-            'tenant.email' => 'required|email|max:256',
-            'tenant.identity_card_number' => [
+            'mail' => 'required|email|max:256',
+            'identity_card_number' => [
                 'required',
                 new IdCard
             ],

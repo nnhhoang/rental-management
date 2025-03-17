@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
@@ -125,7 +126,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'providers' =>ServiceProvider::defaultProviders()->merge([
+    'providers' => ServiceProvider::defaultProviders()->merge([
         Illuminate\Auth\AuthServiceProvider::class,
         Illuminate\Broadcasting\BroadcastServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
@@ -153,13 +154,15 @@ return [
         Laravel\Sanctum\SanctumServiceProvider::class,
         Laravel\Fortify\FortifyServiceProvider::class,
 
+        App\Providers\FortifyServiceProvider::class,
+
         // Application Service Providers...
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        
+
         // Custom Service Providers
         App\Providers\RepositoryServiceProvider::class,
     ])->toArray(),

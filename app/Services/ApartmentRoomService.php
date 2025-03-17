@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Events\RoomCreated;
@@ -41,19 +42,19 @@ class ApartmentRoomService
     {
         try {
             DB::beginTransaction();
-            
+
             $imagePath = null;
-            
+
             if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
                 $imagePath = $this->uploadImage($data['image']);
                 $data['image'] = $imagePath;
             }
-            
+
             $room = $this->roomRepository->create($data);
-            
+
             // Dispatch room created event
             event(new RoomCreated($room));
-            
+
             DB::commit();
             return $room;
         } catch (\Exception $e) {
@@ -65,34 +66,34 @@ class ApartmentRoomService
             throw $e;
         }
     }
-    
+
     public function updateRoom(int $id, array $data)
     {
         try {
             DB::beginTransaction();
-            
+
             $room = $this->roomRepository->find($id);
-            
+
             if (!$room) {
                 return false;
             }
-            
+
             $oldImage = $room->image;
             $newImage = null;
-            
+
             if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
                 // Upload new image
                 $newImage = $this->uploadImage($data['image']);
                 $data['image'] = $newImage;
             }
-            
+
             $result = $this->roomRepository->update($id, $data);
-            
+
             // Delete old image if exists and a new one was uploaded
             if ($oldImage && $newImage) {
                 Storage::delete($oldImage);
             }
-            
+
             DB::commit();
             return $result;
         } catch (\Exception $e) {
@@ -104,27 +105,27 @@ class ApartmentRoomService
             throw $e;
         }
     }
-    
+
     public function deleteRoom(int $id)
     {
         try {
             DB::beginTransaction();
-            
+
             $room = $this->roomRepository->find($id);
-            
+
             if (!$room) {
                 return false;
             }
-            
+
             $image = $room->image;
-            
+
             $result = $this->roomRepository->delete($id);
-            
+
             // Delete image if exists
             if ($image) {
                 Storage::delete($image);
             }
-            
+
             DB::commit();
             return $result;
         } catch (\Exception $e) {
@@ -142,6 +143,12 @@ class ApartmentRoomService
     {
         return $this->roomRepository->findRoomsWithoutTenant();
     }
+
+    public function getRoomsWithoutTenantByApartment(int $apartmentId)
+    {
+        return $this->roomRepository->findRoomsWithoutTenantByApartment($apartmentId);
+    }
+
 
     private function uploadImage(UploadedFile $file)
     {

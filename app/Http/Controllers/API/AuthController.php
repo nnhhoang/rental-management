@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Requests\Auth\AdminLoginRequest;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Resources\AdminResource;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
@@ -84,6 +86,47 @@ class AuthController extends BaseController
     {
         return $this->successResponse(
             new UserResource(Auth::user())
+        );
+    }
+
+    public function adminLogin(AdminLoginRequest $request)
+    {
+        $result = $this->authService->adminLogin($request->validated());
+
+        if (!$result['success']) {
+            return $this->errorResponse(
+                trans('messages.auth.login_failed'),
+                null,
+                401
+            );
+        }
+
+        return $this->successResponse([
+            'admin' => new AdminResource($result['admin']),
+            'token' => $result['token']
+        ], trans('messages.auth.login_success'));
+    }
+
+    public function adminLogout()
+    {
+        $this->authService->adminLogout();
+        
+        return $this->successResponse(
+            null,
+            trans('messages.auth.logout_success')
+        );
+    }
+
+    public function adminProfile()
+    {
+        $admin = Auth::guard('admin')->user();
+        
+        if (!$admin) {
+            return $this->unauthorizedResponse();
+        }
+        
+        return $this->successResponse(
+            new AdminResource($admin)
         );
     }
 }

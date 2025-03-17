@@ -32,13 +32,14 @@ class TenantController extends BaseController
     {
         $withContracts = $request->query('with_contracts', false);
         $search = $request->query('search');
-        
+        $perPage = $request->query('per_page', 15);
+
         if ($search) {
-            $tenants = $this->tenantService->searchTenants($search, $withContracts);
+            $tenants = $this->tenantService->searchTenants($search, $withContracts, $perPage);
         } else {
-            $tenants = $this->tenantService->getAllTenants($withContracts);
+            $tenants = $this->tenantService->getAllTenants($withContracts, $perPage);
         }
-        
+
         return $this->successResponse(
             TenantResource::collection($tenants)
         );
@@ -54,13 +55,13 @@ class TenantController extends BaseController
     public function show($id, Request $request)
     {
         $withContracts = $request->query('with_contracts', false);
-        
+
         $tenant = $this->tenantService->getTenant($id, $withContracts);
-        
+
         if (!$tenant) {
             return $this->notFoundResponse(trans('messages.tenant.not_found'));
         }
-        
+
         return $this->successResponse(
             new TenantResource($tenant)
         );
@@ -75,9 +76,9 @@ class TenantController extends BaseController
     public function store(StoreTenantRequest $request)
     {
         $data = $request->validated();
-        
+
         $tenant = $this->tenantService->createTenant($data);
-        
+
         return $this->successResponse(
             new TenantResource($tenant),
             trans('messages.tenant.created_successfully'),
@@ -95,13 +96,13 @@ class TenantController extends BaseController
     public function update(UpdateTenantRequest $request, $id)
     {
         $data = $request->validated();
-        
+
         $tenant = $this->tenantService->updateTenant($id, $data);
-        
+
         if (!$tenant) {
             return $this->notFoundResponse(trans('messages.tenant.not_found'));
         }
-        
+
         return $this->successResponse(
             new TenantResource($tenant),
             trans('messages.tenant.updated_successfully')
@@ -118,7 +119,7 @@ class TenantController extends BaseController
     {
         // Check if tenant has active contracts before deleting
         $hasActiveContracts = $this->contractService->tenantHasActiveContracts($id);
-        
+
         if ($hasActiveContracts) {
             return $this->errorResponse(
                 trans('messages.tenant.has_active_contracts'),
@@ -126,13 +127,13 @@ class TenantController extends BaseController
                 422
             );
         }
-        
+
         $deleted = $this->tenantService->deleteTenant($id);
-        
+
         if (!$deleted) {
             return $this->notFoundResponse(trans('messages.tenant.not_found'));
         }
-        
+
         return $this->successResponse(
             null,
             trans('messages.tenant.deleted_successfully')
@@ -147,11 +148,19 @@ class TenantController extends BaseController
     public function userTenants(Request $request)
     {
         $withContracts = $request->query('with_contracts', false);
-        $tenants = $this->tenantService->getTenantsByUser(auth()->id(), $withContracts);
-        
-        return $this->successResponse(
-            TenantResource::collection($tenants)
+        $search = $request->query('search');
+        $page = $request->query('page', 1);
+        $perPage = $request->query('per_page', 15);
+
+        $tenants = $this->tenantService->getTenantsByUser(
+            auth()->id(),
+            $withContracts,
+            $perPage,
+            $search,
+            $page
         );
+
+        return $this->successResponse($tenants);
     }
 
     /**
@@ -163,13 +172,13 @@ class TenantController extends BaseController
     public function getContracts($id)
     {
         $tenant = $this->tenantService->getTenant($id);
-        
+
         if (!$tenant) {
             return $this->notFoundResponse(trans('messages.tenant.not_found'));
         }
-        
+
         $contracts = $this->contractService->getContractHistory($id);
-        
+
         return $this->successResponse(
             TenantContractResource::collection($contracts)
         );

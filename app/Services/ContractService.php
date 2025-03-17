@@ -142,19 +142,29 @@ class ContractService {
         DB::beginTransaction();
     
         try {
+            $tenantId = null;
             
             if ($data['is_create_tenant']) {
-                $tenant = $this->tenantRepository->create([
-                    'name' => $data['name'],
-                    'tel' => $data['tel'],
-                    'email' => $data['email'],
-                    'identity_card_number' => $data['identity_card_number']
-                ]);
-                $tenantId = $tenant->id;
+                $existingTenant = $this->tenantRepository->findByEmailOrIdCard(
+                    $data['email'],
+                    $data['identity_card_number']
+                );
+                
+                if ($existingTenant) {
+                    $tenantId = $existingTenant->id;
+                } else {
+                    $tenant = $this->tenantRepository->create([
+                        'name' => $data['name'],
+                        'tel' => $data['tel'],
+                        'email' => $data['email'],
+                        'identity_card_number' => $data['identity_card_number']
+                    ]);
+                    $tenantId = $tenant->id;
+                }
             } else {
                 $tenantId = $data['tenant_id'];
             }            
-
+    
             $contract = $this->contractRepository->create([
                 'apartment_room_id' => $data['apartment_room_id'],
                 'tenant_id' => $tenantId,
@@ -177,8 +187,9 @@ class ContractService {
             return [
                 'success' => true,
                 'contract' => $contract,
-                'message' => trans('messages.contract.creation_failed'),
-                'tenant_created' => $data['is_create_tenant'] ?? false
+                'message' => trans('messages.contract.created_successfully'),
+                'tenant_created' => !isset($existingTenant) && $data['is_create_tenant'] ?? false,
+                'tenant_existed' => isset($existingTenant)
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -208,10 +219,10 @@ class ContractService {
             }
 
             $this->tenantRepository->update($contract->tenant_id, [
-                'name' => $data['tenant']['name'],
-                'tel' => $data['tenant']['tel'], 
-                'email' => $data['tenant']['email'],
-                'identity_card_number' => $data['tenant']['identity_card_number']
+                'name' => $data['name'],
+                'tel' => $data['tel'], 
+                'email' => $data['email'],
+                'identity_card_number' => $data['identity_card_number']
             ]);
 
             $contract = $this->contractRepository->update($id, [

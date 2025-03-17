@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name', 45);
             $table->string('tel', 45);
-            $table->string('identity_card_number', 45)->nullable();
-            $table->string('email', 256);
+            $table->string('identity_card_number', 45)->nullable()->unique();
+            $table->string('email', 256)->unique();
             $table->timestamps();
         });
     }

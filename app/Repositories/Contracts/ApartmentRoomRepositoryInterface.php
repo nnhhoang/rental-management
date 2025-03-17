@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Contracts;
 
 interface ApartmentRoomRepositoryInterface extends BaseRepositoryInterface
@@ -7,4 +8,5 @@ interface ApartmentRoomRepositoryInterface extends BaseRepositoryInterface
     public function getByApartment(int $apartmentId);
     public function findRoomsWithActiveContract();
     public function findRoomsWithoutTenant();
+    public function findRoomsWithoutTenantByApartment(int $apartmentId);
 }

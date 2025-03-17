@@ -22,16 +22,16 @@ class ApartmentService
         return $this->apartmentRepository->paginate($perPage);
     }
 
-    public function getUserApartments(int $userId)
+    public function getUserApartments(int $userId, int $perPage = null)
     {
-        return $this->apartmentRepository->getByUser($userId);
+        return $this->apartmentRepository->getByUser($userId, $perPage);
     }
 
-    public function searchApartments(string $query, int $perPage = 15)
+    public function searchApartments(string $query, int $perPage = 15, ?int $userId = null)
     {
-        return $this->apartmentRepository->searchApartments($query, $perPage);
+        return $this->apartmentRepository->searchApartments($query, $perPage, $userId);
     }
-
+    
     public function getApartment(int $id)
     {
         return $this->apartmentRepository->find($id);
