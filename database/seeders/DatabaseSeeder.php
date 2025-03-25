@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Clear existing data first
+        // Xóa dữ liệu cũ
         Schema::disableForeignKeyConstraints();
         RoomFeeCollectionHistory::truncate();
         RoomFeeCollection::truncate();
@@ -36,264 +36,255 @@ class DatabaseSeeder extends Seeder
         MonthlyCost::truncate();
         Tenant::truncate();
         User::truncate();
+        DB::table('personal_access_tokens')->truncate();
         Schema::enableForeignKeyConstraints();
 
-        $this->command->info('Đã xóa dữ liệu cũ, tạo dữ liệu mới');
+        $this->command->info('Đã xóa dữ liệu cũ, bắt đầu tạo dữ liệu mới');
 
-        // Create fixed password for all users
-        $standardPassword = Hash::make('password123');
-
-        // Create admin user with known credentials
-        $admin = User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => $standardPassword
+        // Tạo user chủ trọ với thông tin đăng nhập đơn giản
+        $landlord = User::create([
+            'name' => 'Chủ Trọ Demo',
+            'email' => 'landlord@example.com',
+            'password' => Hash::make('password123')
         ]);
-        $this->command->info('Đã tạo tài khoản admin: admin@example.com / password123');
 
-        // Create demo user for easy testing
-        $demoUser = User::factory()->create([
-            'name' => 'Demo User',
-            'email' => 'demo@example.com',
-            'password' => $standardPassword
-        ]);
-        $this->command->info('Đã tạo tài khoản demo: demo@example.com / password123');
+        // Tạo token cho user để dễ dàng sử dụng API
+        $landlord->tokens()->delete(); // Xóa token cũ nếu có
+        $token = $landlord->createToken('test-token')->plainTextToken;
+        $this->command->info('Đã tạo tài khoản chủ trọ: landlord@example.com / password123');
+        $this->command->info('Token API: ' . $token);
 
-        // Create regular users
-        $users = User::factory()
-            ->count(18) // 18 + admin + demo = 20 users total
-            ->create([
-                'password' => $standardPassword
-            ]);
-        $users = $users->concat([$admin, $demoUser]);
-        $this->command->info('Tạo 20 người dùng với mật khẩu: password123');
-
-        // Create monthly costs
+        // Tạo các chi phí hàng tháng cơ bản
         $monthlyCosts = [
             'Internet' => MonthlyCost::create(['name' => 'Internet']),
-            'Trash' => MonthlyCost::create(['name' => 'Trash']),
-            'Security' => MonthlyCost::create(['name' => 'Security']),
-            'Cleaning' => MonthlyCost::create(['name' => 'Cleaning']),
-            'Parking' => MonthlyCost::create(['name' => 'Parking']),
+            'Rác' => MonthlyCost::create(['name' => 'Rác']),
         ];
-        $this->command->info('Đã tạo các loại chi phí hàng tháng');
+        $this->command->info('Đã tạo chi phí hàng tháng: Internet, Rác');
 
-        // Create apartments for each user
-        $apartments = [];
-        foreach ($users as $user) {
-            $userApartments = Apartment::factory()
-                ->count(rand(3, 7))
-                ->create(['user_id' => $user->id]);
-            $apartments = array_merge($apartments, $userApartments->all());
-        }
-        $this->command->info('Đã tạo ' . count($apartments) . ' tòa nhà');
+        // Tạo 2 tòa nhà cho landlord
+        $building1 = Apartment::create([
+            'user_id' => $landlord->id,
+            'name' => 'Chung cư Minh Khai',
+            'address' => '123 Minh Khai, Hà Nội',
+            'province_id' => '01',
+            'district_id' => '001',
+            'ward_id' => '00001',
+        ]);
 
-        // Create rooms for each apartment
+        $building2 = Apartment::create([
+            'user_id' => $landlord->id,
+            'name' => 'Nhà trọ Thanh Xuân',
+            'address' => '456 Thanh Xuân, Hà Nội',
+            'province_id' => '01',
+            'district_id' => '002',
+            'ward_id' => '00002',
+        ]);
+        $this->command->info('Đã tạo 2 tòa nhà: Chung cư Minh Khai, Nhà trọ Thanh Xuân');
+
+        // Tạo phòng cho mỗi tòa nhà
         $rooms = [];
-        foreach ($apartments as $apartment) {
-            $apartmentRooms = ApartmentRoom::factory()
-                ->count(rand(3, 7))
-                ->create(['apartment_id' => $apartment->id]);
-            $rooms = array_merge($rooms, $apartmentRooms->all());
-        }
-        $this->command->info('Đã tạo ' . count($rooms) . ' phòng');
 
-        // Create tenants
-        $tenants = Tenant::factory()->count(200)->create();
-        $this->command->info('Đã tạo 200 người thuê');
+        // Phòng cho tòa nhà 1
+        $room101 = ApartmentRoom::create([
+            'apartment_id' => $building1->id,
+            'room_number' => '101',
+            'default_price' => 3000000,
+            'max_tenant' => 2,
+        ]);
+        $rooms[] = $room101;
 
-        // Create contracts - ensure every tenant has at least one contract
-        $contracts = [];
+        $room102 = ApartmentRoom::create([
+            'apartment_id' => $building1->id,
+            'room_number' => '102',
+            'default_price' => 3500000,
+            'max_tenant' => 3,
+        ]);
+        $rooms[] = $room102;
 
-        // First ensure every tenant has at least one contract
-        foreach ($tenants as $tenant) {
-            // Find a room without an active contract
-            $roomId = null;
-            foreach ($rooms as $room) {
-                $hasActiveContract = TenantContract::where('apartment_room_id', $room->id)
-                    ->where(function ($query) {
-                        $query->whereNull('end_date')
-                            ->orWhere('end_date', '>', now());
-                    })->exists();
+        // Phòng cho tòa nhà 2
+        $room201 = ApartmentRoom::create([
+            'apartment_id' => $building2->id,
+            'room_number' => '201',
+            'default_price' => 2500000,
+            'max_tenant' => 2,
+        ]);
+        $rooms[] = $room201;
 
-                if (!$hasActiveContract) {
-                    $roomId = $room->id;
-                    break;
-                }
-            }
+        $room202 = ApartmentRoom::create([
+            'apartment_id' => $building2->id,
+            'room_number' => '202',
+            'default_price' => 2800000,
+            'max_tenant' => 2,
+        ]);
+        $rooms[] = $room202;
 
-            // If no room found, just pick a random one
-            if (!$roomId && count($rooms) > 0) {
-                $room = $rooms[array_rand($rooms)];
-                $roomId = $room->id;
-            }
+        $this->command->info('Đã tạo 4 phòng: 101, 102, 201, 202');
 
-            if ($roomId) {
-                // 70% active contracts, 30% ended
-                if (rand(1, 100) <= 70) {
-                    $contract = TenantContract::factory()->active()->create([
-                        'apartment_room_id' => $roomId,
-                        'tenant_id' => $tenant->id
-                    ]);
-                } else {
-                    $contract = TenantContract::factory()->ended()->create([
-                        'apartment_room_id' => $roomId,
-                        'tenant_id' => $tenant->id
-                    ]);
-                }
+        // Tạo người thuê
+        $tenant1 = Tenant::create([
+            'name' => 'Nguyễn Văn A',
+            'tel' => '0912345678',
+            'email' => 'nguyenvana@example.com',
+            'identity_card_number' => '123456789012',
+        ]);
 
-                $contracts[] = $contract;
+        $tenant2 = Tenant::create([
+            'name' => 'Trần Thị B',
+            'tel' => '0987654321',
+            'email' => 'tranthib@example.com',
+            'identity_card_number' => '987654321098',
+        ]);
 
-                // Add 1-3 monthly costs to each contract
-                $costCount = rand(1, 3);
-                $selectedCosts = array_rand($monthlyCosts, $costCount);
+        $tenant3 = Tenant::create([
+            'name' => 'Lê Văn C',
+            'tel' => '0912345678',
+            'email' => 'levanc@example.com',
+            'identity_card_number' => '123456789013',
+        ]);
+        $this->command->info('Đã tạo 3 người thuê: Nguyễn Văn A, Trần Thị B, Lê Văn C');
 
-                if (!is_array($selectedCosts)) {
-                    $selectedCosts = [$selectedCosts];
-                }
+        // Tạo hợp đồng
+        $startDate1 = Carbon::create(2024, 1, 1);
+        $contract1 = TenantContract::create([
+            'apartment_room_id' => $room101->id,
+            'tenant_id' => $tenant1->id,
+            'pay_period' => 3, // 3 tháng
+            'price' => 3000000,
+            'electricity_pay_type' => 3, // theo mức sử dụng
+            'electricity_price' => 3500, // 3,500 VND/kWh
+            'electricity_number_start' => 100,
+            'water_pay_type' => 2, // cố định
+            'water_price' => 100000, // 100,000 VND/tháng
+            'water_number_start' => 50,
+            'number_of_tenant_current' => 1,
+            'start_date' => $startDate1,
+            'end_date' => null, // hợp đồng còn hiệu lực
+        ]);
 
-                foreach ($selectedCosts as $costKey) {
-                    ContractMonthlyCost::create([
-                        'tenant_contract_id' => $contract->id,
-                        'monthly_cost_id' => $monthlyCosts[$costKey]->id,
-                        'pay_type' => rand(1, 3), // 1: per person, 2: fixed, 3: by usage
-                        'price' => rand(5, 30) * 10000 // 50,000 - 300,000 VND
-                    ]);
-                }
-            }
-        }
+        // Tạo chi phí hàng tháng cho hợp đồng 1
+        ContractMonthlyCost::create([
+            'tenant_contract_id' => $contract1->id,
+            'monthly_cost_id' => $monthlyCosts['Internet']->id,
+            'pay_type' => 2, // cố định
+            'price' => 150000, // 150,000 VND
+        ]);
 
-        // Create more contracts to reach desired number
-        $roomIds = collect($rooms)->pluck('id')->toArray();
-        shuffle($roomIds);
+        ContractMonthlyCost::create([
+            'tenant_contract_id' => $contract1->id,
+            'monthly_cost_id' => $monthlyCosts['Rác']->id,
+            'pay_type' => 2, // cố định
+            'price' => 30000, // 30,000 VND
+        ]);
 
-        // Count how many more contracts to create
-        $additionalContractsNeeded = max(0, 300 - count($contracts));
+        $startDate2 = Carbon::create(2023, 12, 1);
+        $endDate2 = Carbon::create(2024, 3, 1);
+        $contract2 = TenantContract::create([
+            'apartment_room_id' => $room201->id,
+            'tenant_id' => $tenant2->id,
+            'pay_period' => 3, // 3 tháng
+            'price' => 2500000,
+            'electricity_pay_type' => 3, // theo mức sử dụng
+            'electricity_price' => 3500, // 3,500 VND/kWh
+            'electricity_number_start' => 50,
+            'water_pay_type' => 2, // cố định
+            'water_price' => 100000, // 100,000 VND/tháng
+            'water_number_start' => 20,
+            'number_of_tenant_current' => 2,
+            'start_date' => $startDate2,
+            'end_date' => $endDate2, // hợp đồng đã kết thúc
+        ]);
 
-        // Create additional contracts
-        for ($i = 0; $i < $additionalContractsNeeded; $i++) {
-            $roomId = $roomIds[$i % count($roomIds)]; // Cycle through rooms
-            $tenant = $tenants[array_rand($tenants->toArray())];
+        // Tạo hợp đồng mới cho phòng 201 sau khi hợp đồng cũ kết thúc
+        $startDate3 = Carbon::create(2024, 3, 5);
+        $contract3 = TenantContract::create([
+            'apartment_room_id' => $room201->id,
+            'tenant_id' => $tenant3->id,
+            'pay_period' => 6, // 6 tháng
+            'price' => 2600000,
+            'electricity_pay_type' => 3, // theo mức sử dụng
+            'electricity_price' => 3500, // 3,500 VND/kWh
+            'electricity_number_start' => 150,
+            'water_pay_type' => 2, // cố định
+            'water_price' => 100000, // 100,000 VND/tháng
+            'water_number_start' => 45,
+            'number_of_tenant_current' => 1,
+            'start_date' => $startDate3,
+            'end_date' => null, // hợp đồng còn hiệu lực
+        ]);
+        $this->command->info('Đã tạo 3 hợp đồng: 2 đang hoạt động, 1 đã kết thúc');
 
-            if (rand(1, 100) <= 70) {
-                $contract = TenantContract::factory()->active()->create([
-                    'apartment_room_id' => $roomId,
-                    'tenant_id' => $tenant->id
-                ]);
-            } else {
-                $contract = TenantContract::factory()->ended()->create([
-                    'apartment_room_id' => $roomId,
-                    'tenant_id' => $tenant->id
-                ]);
-            }
+        // Tạo chỉ số điện nước cho hợp đồng 1
+        ElectricityUsage::create([
+            'apartment_room_id' => $room101->id,
+            'usage_number' => 150, // Số điện tháng đầu tiên
+            'input_date' => (clone $startDate1)->addMonth(1),
+        ]);
 
-            $contracts[] = $contract;
+        ElectricityUsage::create([
+            'apartment_room_id' => $room101->id,
+            'usage_number' => 210, // Số điện tháng thứ hai
+            'input_date' => (clone $startDate1)->addMonths(2),
+        ]);
 
-            // Add monthly costs
-            $costCount = rand(1, 3);
-            $selectedCosts = array_rand($monthlyCosts, $costCount);
+        WaterUsage::create([
+            'apartment_room_id' => $room101->id,
+            'usage_number' => 55, // Số nước tháng đầu tiên
+            'input_date' => (clone $startDate1)->addMonth(1),
+        ]);
 
-            if (!is_array($selectedCosts)) {
-                $selectedCosts = [$selectedCosts];
-            }
+        WaterUsage::create([
+            'apartment_room_id' => $room101->id,
+            'usage_number' => 61, // Số nước tháng thứ hai
+            'input_date' => (clone $startDate1)->addMonths(2),
+        ]);
 
-            foreach ($selectedCosts as $costKey) {
-                ContractMonthlyCost::create([
-                    'tenant_contract_id' => $contract->id,
-                    'monthly_cost_id' => $monthlyCosts[$costKey]->id,
-                    'pay_type' => rand(1, 3),
-                    'price' => rand(5, 30) * 10000
-                ]);
-            }
-        }
+        // Tạo phí thu cho hợp đồng 1
+        $fee1 = RoomFeeCollection::create([
+            'tenant_contract_id' => $contract1->id,
+            'apartment_room_id' => $room101->id,
+            'tenant_id' => $tenant1->id,
+            'electricity_number_before' => 100,
+            'electricity_number_after' => 150,
+            'water_number_before' => 50,
+            'water_number_after' => 55,
+            'charge_date' => (clone $startDate1)->addMonth(1),
+            'total_debt' => 0,
+            'total_price' => 3350000, // Tiền phòng + điện nước + phí
+            'total_paid' => 3350000, // Đã thanh toán đủ
+            'fee_collection_uuid' => '123e4567-e89b-12d3-a456-426614174000',
+        ]);
 
-        $this->command->info('Đã tạo ' . count($contracts) . ' hợp đồng');
+        // Tạo lịch sử thanh toán
+        RoomFeeCollectionHistory::create([
+            'room_fee_collection_id' => $fee1->id,
+            'paid_date' => (clone $startDate1)->addMonth(1)->addDays(3),
+            'price' => 3350000,
+        ]);
 
-        // Create fee collections
-        $feeCollections = [];
-        foreach ($contracts as $contract) {
-            $feeCount = rand(1, 5);
-            $startDate = new Carbon($contract->start_date);
+        // Tạo phí thu cho hợp đồng 1 tháng thứ hai (chưa thanh toán)
+        $fee2 = RoomFeeCollection::create([
+            'tenant_contract_id' => $contract1->id,
+            'apartment_room_id' => $room101->id,
+            'tenant_id' => $tenant1->id,
+            'electricity_number_before' => 150,
+            'electricity_number_after' => 210,
+            'water_number_before' => 55,
+            'water_number_after' => 61,
+            'charge_date' => (clone $startDate1)->addMonths(2),
+            'total_debt' => 0,
+            'total_price' => 3550000, // Tiền phòng + điện nước + phí
+            'total_paid' => 1000000, // Mới trả một phần
+            'fee_collection_uuid' => '123e4567-e89b-12d3-a456-426614174001',
+        ]);
 
-            for ($i = 0; $i < $feeCount; $i++) {
-                $chargeDate = (clone $startDate)->addMonths($i);
+        // Tạo lịch sử thanh toán một phần
+        RoomFeeCollectionHistory::create([
+            'room_fee_collection_id' => $fee2->id,
+            'paid_date' => (clone $startDate1)->addMonths(2)->addDays(2),
+            'price' => 1000000,
+        ]);
 
-                // Don't create fee collections for future months
-                if ($chargeDate > now()) {
-                    continue;
-                }
-
-                if (rand(1, 100) <= 70) {
-                    $feeCollection = RoomFeeCollection::factory()
-                        ->paid()
-                        ->forContract($contract)
-                        ->create([
-                            'charge_date' => $chargeDate
-                        ]);
-
-                    // Add payment history
-                    RoomFeeCollectionHistory::create([
-                        'room_fee_collection_id' => $feeCollection->id,
-                        'paid_date' => (clone $chargeDate)->addDays(rand(1, 5)),
-                        'price' => $feeCollection->total_price
-                    ]);
-                } else {
-                    $feeCollection = RoomFeeCollection::factory()
-                        ->unpaid()
-                        ->forContract($contract)
-                        ->create([
-                            'charge_date' => $chargeDate
-                        ]);
-                }
-
-                $feeCollections[] = $feeCollection;
-            }
-        }
-        $this->command->info('Đã tạo ' . count($feeCollections) . ' mục thu phí');
-
-        // Create utility readings aligned with contracts
-        $electricityReadings = [];
-        $waterReadings = [];
-
-        foreach ($contracts as $contract) {
-            $roomId = $contract->apartment_room_id;
-            $startDate = new Carbon($contract->start_date);
-            $endDate = $contract->end_date ? new Carbon($contract->end_date) : now();
-
-            // Create monthly readings from contract start to contract end or current date
-            $currentDate = clone $startDate;
-            $lastElectricityReading = $contract->electricity_number_start;
-            $lastWaterReading = $contract->water_number_start;
-
-            while ($currentDate <= $endDate) {
-                // Create electricity reading
-                $newReading = $lastElectricityReading + rand(20, 100);
-                $electricityUsage = ElectricityUsage::create([
-                    'apartment_room_id' => $roomId,
-                    'usage_number' => $newReading,
-                    'input_date' => clone $currentDate,
-                    'image' => null
-                ]);
-                $electricityReadings[] = $electricityUsage;
-                $lastElectricityReading = $newReading;
-
-                // Create water reading
-                $newReading = $lastWaterReading + rand(2, 10);
-                $waterUsage = WaterUsage::create([
-                    'apartment_room_id' => $roomId,
-                    'usage_number' => $newReading,
-                    'input_date' => clone $currentDate,
-                    'image' => null
-                ]);
-                $waterReadings[] = $waterUsage;
-                $lastWaterReading = $newReading;
-
-                $currentDate->addMonth();
-            }
-        }
-
-        $this->command->info('Đã tạo ' . count($electricityReadings) . ' chỉ số điện');
-        $this->command->info('Đã tạo ' . count($waterReadings) . ' chỉ số nước');
-        $this->command->info('Đã tạo thành công tất cả dữ liệu!');
+        $this->command->info('Đã tạo 2 kỳ phí thu: 1 đã thanh toán đủ, 1 còn thiếu');
+        $this->command->info('Đã tạo thành công bộ dữ liệu test!');
     }
 }

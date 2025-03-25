@@ -8,4 +8,4 @@ Route::get('/', function () {
 
 Route::get('/contracts/create', function () {
     return view('contracts.create');
-});
+})->middleware('auth');
