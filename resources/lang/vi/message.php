@@ -55,6 +55,10 @@ return [
         'no_permission' => 'Bạn không có quyền truy cập hợp đồng này',
         'active_contract_exists' => 'Phòng đã có hợp đồng đang hoạt động',
         'no_active_contract' => 'Không tìm thấy hợp đồng đang hoạt động cho phòng này',
+        'date_conflict' => 'Thời gian hợp đồng trùng với hợp đồng đã tồn tại từ :start_date đến :end_date',
+        'date_not_available' => 'Ngày bắt đầu hợp đồng không khả dụng. Đã có hợp đồng kết thúc vào ngày :end_date',
+        'creation_failed' => 'Tạo hợp đồng thất bại',
+        'has_fee_collections' => 'Không thể xóa hợp đồng có liên kết với các khoản phí',
     ],
     
     // Fee messages

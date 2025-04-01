@@ -52,7 +52,7 @@
               :class="{ 'border-red-500': errors.identity_card_number }"
               :placeholder="$t('tenant.enter_identity_card')">
             <span v-if="errors.identity_card_number" class="text-red-500 text-xs mt-1">{{ errors.identity_card_number
-              }}</span>
+            }}</span>
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@
                 <tr v-for="tenant in tenants" :key="tenant.id" class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <input type="radio" :checked="formData.tenant_id === tenant.id" @change="selectTenant(tenant)"
-                      class="form-radio h-4 w-4 text-blue-600" />
+                      name="tenant_selection" :value="tenant.id" class="form-radio h-4 w-4 text-blue-600" />
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ tenant.name }}</div>
@@ -179,11 +179,12 @@
 </template>
 
 <script>
-import { ref, watch, computed, reactive } from 'vue';
+import { ref, watch, computed, reactive, onMounted } from 'vue';
 import axios from 'axios';
 import { debounce } from 'lodash';
 import { USE_MOCK_DATA } from '../../../config';
 import mockApi from '../../../services/mockApi';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'StepTenant',
@@ -196,6 +197,7 @@ export default {
   emits: ['update', 'validate'],
 
   setup(props, { emit }) {
+    const { t } = useI18n();
     const tenants = ref([]);
     const loading = ref(false);
     const searchQuery = ref('');
@@ -230,6 +232,16 @@ export default {
     // Fetch tenants from API or mock data
     const fetchTenants = async () => {
       try {
+        if (!USE_MOCK_DATA) {
+          const token = localStorage.getItem('auth_token');
+          if (!token) {
+            console.error('Authentication token not found');
+            alert(t('auth.login_required'));
+            window.location.href = '/login';
+            return;
+          }
+        }
+
         loading.value = true;
 
         let response;
@@ -250,11 +262,42 @@ export default {
           });
         }
 
-        tenants.value = response.data.data;
-        totalTenants.value = response.data.meta.total || tenants.value.length;
-        lastPage.value = response.data.meta.last_page || 1;
+        // Check if response data has the expected structure
+        if (response.data && response.data.data) {
+          tenants.value = response.data.data;
+
+          // Safely access meta data with fallbacks
+          if (response.data.meta) {
+            totalTenants.value = response.data.meta.total || tenants.value.length;
+            lastPage.value = response.data.meta.last_page || 1;
+          } else {
+            totalTenants.value = tenants.value.length;
+            lastPage.value = 1;
+          }
+        } else {
+          console.error('Unexpected response format:', response);
+          tenants.value = [];
+          totalTenants.value = 0;
+          lastPage.value = 1;
+        }
       } catch (error) {
         console.error('Error fetching tenants:', error);
+        tenants.value = [];
+        totalTenants.value = 0;
+        lastPage.value = 1;
+
+        // Handle specific errors
+        if (error.response) {
+          if (error.response.status === 401) {
+            // Clear invalid token
+            localStorage.removeItem('auth_token');
+            alert(t('auth.session_expired'));
+            window.location.href = '/login';
+          } else if (error.response.status === 422) {
+            // Validation error
+            console.error('Validation error:', error.response.data.errors);
+          }
+        }
       } finally {
         loading.value = false;
       }
@@ -268,8 +311,16 @@ export default {
 
     // Select a tenant
     const selectTenant = (tenant) => {
-      emit('update', 'tenant_id', tenant.id);
-      console.log('Đã chọn người thuê:', tenant.name, 'với ID:', tenant.id);
+      // Parse the tenant.id to ensure it's an integer
+      const tenantId = parseInt(tenant.id, 10);
+
+      // Update the tenant_id in the form data
+      emit('update', 'tenant_id', tenantId);
+
+      // Log selection for debugging
+      console.log('Selected tenant:', tenant.name, 'with ID:', tenantId, '(type:', typeof tenantId, ')');
+
+      // Also store the tenant object for reference
       emit('update', 'selectedTenantInfo', tenant);
     };
 
@@ -280,28 +331,28 @@ export default {
       switch (field) {
         case 'name':
           if (!props.formData.name) {
-            errors[field] = $t('validation.required', { attribute: $t('tenant.name').toLowerCase() });
+            errors[field] = t('validation.required', { attribute: t('tenant.name').toLowerCase() });
           }
           break;
         case 'tel':
           if (!props.formData.tel) {
-            errors[field] = $t('validation.required', { attribute: $t('tenant.tel').toLowerCase() });
+            errors[field] = t('validation.required', { attribute: t('tenant.tel').toLowerCase() });
           } else if (!/^(0|\+84)([0-9]{9}|[0-9]{10})$/.test(props.formData.tel)) {
-            errors[field] = $t('validation.tel.invalid_format');
+            errors[field] = t('validation.tel.invalid_format');
           }
           break;
         case 'email':
           if (!props.formData.email) {
-            errors[field] = $t('validation.required', { attribute: $t('tenant.email').toLowerCase() });
+            errors[field] = t('validation.required', { attribute: t('tenant.email').toLowerCase() });
           } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(props.formData.email)) {
-            errors[field] = $t('validation.email', { attribute: $t('tenant.email').toLowerCase() });
+            errors[field] = t('validation.email', { attribute: t('tenant.email').toLowerCase() });
           }
           break;
         case 'identity_card_number':
           if (!props.formData.identity_card_number) {
-            errors[field] = $t('validation.required', { attribute: $t('tenant.identity_card_number').toLowerCase() });
+            errors[field] = t('validation.required', { attribute: t('tenant.identity_card_number').toLowerCase() });
           } else if (!/^[0-9]{9,12}$/.test(props.formData.identity_card_number)) {
-            errors[field] = $t('validation.id_card.invalid_format');
+            errors[field] = t('validation.id_card.invalid_format');
           }
           break;
       }
@@ -342,9 +393,12 @@ export default {
     });
 
     // Initialize
-    if (!props.formData.is_create_tenant) {
-      fetchTenants();
-    }
+    onMounted(() => {
+      // Only fetch tenants if selecting existing tenant
+      if (!props.formData.is_create_tenant) {
+        fetchTenants();
+      }
+    });
 
     return {
       tenants,

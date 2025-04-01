@@ -9,6 +9,12 @@ const messages = {
       submit: 'Submit',
       select_option: 'Select an option'
     },
+    auth: {
+      login_required: 'You need to log in to access this feature',
+      session_expired: 'Your session has expired. Please log in again.',
+      login_success: 'Successfully logged in',
+      login_failed: 'Login failed. Please check your credentials and try again.'
+    },
     contract: {
       create_contract: 'Create Contract',
       contract_details: 'Contract Details',
@@ -36,7 +42,10 @@ const messages = {
       start_date: 'Start Date',
       end_date: 'End Date',
       payment_type: 'Payment Type',
-      starting_reading: 'Starting Reading'
+      starting_reading: 'Starting Reading',
+      per_person: 'Per Person',
+      fixed_price: 'Fixed Price',
+      by_usage: 'By Usage'
     },
     tenant: {
       create_new: 'Create New Tenant',
@@ -62,7 +71,7 @@ const messages = {
     room: {
       information: 'Room Information',
       select_room: 'Select Room',
-      no_available_rooms: 'No available rooms',
+      no_available_rooms: 'No rooms available in this apartment',
       room_number: 'Room Number',
       default_price: 'Default Price',
       max_tenant: 'Maximum Tenants',
@@ -75,6 +84,12 @@ const messages = {
       next: 'Tiếp',
       submit: 'Gửi',
       select_option: 'Chọn một tùy chọn'
+    },
+    auth: {
+      login_required: 'Bạn cần đăng nhập để truy cập tính năng này',
+      session_expired: 'Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.',
+      login_success: 'Đăng nhập thành công',
+      login_failed: 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập và thử lại.'
     },
     contract: {
       create_contract: 'Tạo Hợp Đồng',
@@ -103,7 +118,10 @@ const messages = {
       start_date: 'Ngày Bắt Đầu',
       end_date: 'Ngày Kết Thúc',
       payment_type: 'Hình Thức Thanh Toán',
-      starting_reading: 'Chỉ Số Ban Đầu'
+      starting_reading: 'Chỉ Số Ban Đầu',
+      per_person: 'Theo Người',
+      fixed_price: 'Giá Cố Định',
+      by_usage: 'Theo Lượng Sử Dụng'
     },
     tenant: {
       create_new: 'Tạo Người Thuê Mới',
@@ -130,7 +148,7 @@ const messages = {
     room: {
       information: 'Thông Tin Phòng',
       select_room: 'Chọn Phòng',
-      no_available_rooms: 'Không có phòng trống',
+      no_available_rooms: 'Không có phòng nào trong chung cư này',
       room_number: 'Số Phòng',
       default_price: 'Giá Mặc Định',
       max_tenant: 'Số Người Tối Đa',

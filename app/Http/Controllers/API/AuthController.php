@@ -129,4 +129,46 @@ class AuthController extends BaseController
             new AdminResource($admin)
         );
     }
+
+    /**
+     * Generate and return a token for a web-authenticated user
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getToken()
+    {
+        // Check if the request has a valid session and the user is authenticated
+        if (!Auth::check()) {
+            return $this->errorResponse(
+                'Not authenticated. Session may have expired.',
+                null,
+                401
+            );
+        }
+        
+        $user = Auth::guard('web')->user();
+        
+        if (!$user) {
+            // This should not happen if auth()->check() passes, but just in case
+            return $this->errorResponse(
+                'User not found in session',
+                null,
+                401
+            );
+        }
+        
+        // Log the successful authentication
+        \Illuminate\Support\Facades\Log::info('Token generated for user', ['user_id' => $user->id, 'email' => $user->email]);
+        
+        // Revoke existing tokens
+        $user->tokens()->delete();
+        
+        // Create new token
+        $token = $user->createToken('auth_token')->plainTextToken;
+        
+        return $this->successResponse([
+            'token' => $token,
+            'user' => new UserResource($user)
+        ], 'Token generated successfully');
+    }
 }

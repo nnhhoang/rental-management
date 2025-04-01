@@ -139,16 +139,28 @@ class ApartmentRoomService
         return $this->roomRepository->findRoomsWithActiveContract();
     }
 
+    /**
+     * Get all rooms, regardless of tenant status
+     * (Previously returned only rooms without tenants, but now we allow multiple contracts per room)
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function getRoomsWithoutTenant()
     {
         return $this->roomRepository->findRoomsWithoutTenant();
     }
 
+    /**
+     * Get all rooms in an apartment, regardless of tenant status
+     * (Previously returned only rooms without tenants, but now we allow multiple contracts per room)
+     * 
+     * @param int $apartmentId
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function getRoomsWithoutTenantByApartment(int $apartmentId)
     {
         return $this->roomRepository->findRoomsWithoutTenantByApartment($apartmentId);
     }
-
 
     private function uploadImage(UploadedFile $file)
     {

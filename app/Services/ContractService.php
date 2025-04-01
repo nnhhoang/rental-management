@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Carbon\Carbon;
@@ -8,9 +9,10 @@ use App\Repositories\Contracts\TenantContractRepositoryInterface;
 use App\Repositories\Contracts\ApartmentRoomRepositoryInterface;
 use App\Repositories\Contracts\RoomFeeCollectionRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
+use App\Models\TenantContract;
 
-
-class ContractService {
+class ContractService
+{
     protected $contractRepository;
     protected $roomRepository;
     protected $feeCollectionRepository;
@@ -21,8 +23,7 @@ class ContractService {
         ApartmentRoomRepositoryInterface $roomRepository,
         RoomFeeCollectionRepositoryInterface $feeCollectionRepository,
         TenantRepositoryInterface $tenantRepository
-    ) 
-    {
+    ) {
         $this->contractRepository = $contractRepository;
         $this->roomRepository = $roomRepository;
         $this->feeCollectionRepository = $feeCollectionRepository;
@@ -50,19 +51,19 @@ class ContractService {
         if (isset($filters['active']) && $filters['active']) {
             return $this->contractRepository->getActiveContracts();
         }
-        
+
         if (isset($filters['tenant_id']) && $filters['tenant_id']) {
             return $this->getContractHistory($filters['tenant_id']);
         }
-        
+
         if (isset($filters['room_id']) && $filters['room_id']) {
             return $this->contractRepository->getContractsByRoom($filters['room_id']);
         }
-        
+
         if (isset($filters['apartment_id']) && $filters['apartment_id']) {
             return $this->contractRepository->getContractsByApartment($filters['apartment_id']);
         }
-        
+
         return $this->contractRepository->all();
     }
 
@@ -140,31 +141,22 @@ class ContractService {
     public function createContract(array $data)
     {
         DB::beginTransaction();
-    
+
         try {
             $tenantId = null;
-            
+
             if ($data['is_create_tenant']) {
-                $existingTenant = $this->tenantRepository->findByEmailOrIdCard(
-                    $data['email'],
-                    $data['identity_card_number']
-                );
-                
-                if ($existingTenant) {
-                    $tenantId = $existingTenant->id;
-                } else {
-                    $tenant = $this->tenantRepository->create([
-                        'name' => $data['name'],
-                        'tel' => $data['tel'],
-                        'email' => $data['email'],
-                        'identity_card_number' => $data['identity_card_number']
-                    ]);
-                    $tenantId = $tenant->id;
-                }
+                $tenant = $this->tenantRepository->create([
+                    'name' => $data['name'],
+                    'tel' => $data['tel'],
+                    'email' => $data['email'],
+                    'identity_card_number' => $data['identity_card_number']
+                ]);
+                $tenantId = $tenant->id;
             } else {
                 $tenantId = $data['tenant_id'];
-            }            
-    
+            }
+
             $contract = $this->contractRepository->create([
                 'apartment_room_id' => $data['apartment_room_id'],
                 'tenant_id' => $tenantId,
@@ -181,9 +173,9 @@ class ContractService {
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
             ]);
-    
+
             DB::commit();
-    
+
             return [
                 'success' => true,
                 'contract' => $contract,
@@ -200,7 +192,7 @@ class ContractService {
             ];
         }
     }
-    
+
     /**
      * Update a contract
      * 
@@ -208,24 +200,19 @@ class ContractService {
      * @param array $data
      * @return \App\Models\TenantContract|bool
      */
-    public function updateContract(int $id, array $data)
+    public function updateContract(TenantContract $contract, array $data)
     {
         DB::beginTransaction();
         try {
-            $contract = $this->contractRepository->find($id);
-
-            if (!$contract) {
-                throw new \Exception('Contract not found');
-            }
 
             $this->tenantRepository->update($contract->tenant_id, [
                 'name' => $data['name'],
-                'tel' => $data['tel'], 
+                'tel' => $data['tel'],
                 'email' => $data['email'],
                 'identity_card_number' => $data['identity_card_number']
             ]);
 
-            $contract = $this->contractRepository->update($id, [
+            $contract = $this->contractRepository->update($contract->id, [
                 'pay_period' => $data['pay_period'],
                 'price' => $data['price'],
                 'electricity_pay_type' => $data['electricity_pay_type'],
@@ -238,13 +225,12 @@ class ContractService {
             ]);
 
             DB::commit();
-            
+
             return [
                 'success' => true,
                 'contract' => $contract,
                 'message' => trans('messages.contract.update_success')
             ];
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Contract update failed: ' . $e->getMessage());
@@ -265,7 +251,7 @@ class ContractService {
     public function terminateContract(int $id, $endDate = null)
     {
         $endDate = $endDate ?: now();
-        
+
         return $this->contractRepository->update($id, [
             'end_date' => $endDate
         ]);

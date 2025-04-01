@@ -42,19 +42,15 @@ class ApartmentRoomRepository extends BaseRepository implements ApartmentRoomRep
 
     public function findRoomsWithoutTenant()
     {
-        return $this->model->whereDoesntHave('contracts', function ($query) {
-            $query->whereNull('end_date')
-                ->orWhere('end_date', '>', now());
-        })->get();
+        // Return all rooms since we now allow multiple contracts per room
+        return $this->model->get();
     }
+
     public function findRoomsWithoutTenantByApartment(int $apartmentId)
     {
+        // Return all rooms in the apartment since we now allow multiple contracts per room
         return $this->model
             ->where('apartment_id', $apartmentId)
-            ->whereDoesntHave('contracts', function ($query) {
-                $query->whereNull('end_date')
-                    ->orWhere('end_date', '>', now());
-            })
             ->get();
     }
 }

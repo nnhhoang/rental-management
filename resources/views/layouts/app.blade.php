@@ -12,7 +12,9 @@
 <body>
     <div class="min-h-screen">
         <main>
-            @yield('content')
+            <div id="app">
+                @yield('content')
+            </div>
         </main>
     </div>
     

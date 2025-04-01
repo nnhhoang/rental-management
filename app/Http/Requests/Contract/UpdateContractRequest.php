@@ -5,6 +5,7 @@ namespace App\Http\Requests\Contract;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\PhoneNumber;
 use App\Rules\IdCard;
+use Illuminate\Validation\Rule;
 
 class UpdateContractRequest extends FormRequest
 {
@@ -27,12 +28,13 @@ class UpdateContractRequest extends FormRequest
             'name' => 'required|string|max:45',
             'tel' => [
                 'required',
-                new PhoneNumber
+                new PhoneNumber,
             ],
-            'mail' => 'required|email|max:256',
+            'email' => 'required|email|max:256', Rule::unique('tenants', 'email')->ignore($this->tenant->id),
             'identity_card_number' => [
                 'required',
-                new IdCard
+                new IdCard,
+                Rule::unique('tenants', 'identity_card_number')->ignore($this->tenant->id)
             ],
             'pay_period' => 'required|integer|in:3,6,12',
             'price' => 'required|numeric|min:0',
@@ -48,7 +50,7 @@ class UpdateContractRequest extends FormRequest
             'end_date' => 'required|date|date_format:Y-m-d|after:start_date',
         ];
     }
-    
+
     /**
      * Get custom attributes for validator errors.
      *

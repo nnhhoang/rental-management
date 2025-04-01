@@ -94,13 +94,9 @@ export default {
     const loading = ref(false);
     const errorMessage = ref('');
 
-    // Form data
     const formData = reactive({
-      // Room selection
       apartment_room_id: null,
       selectedRoom: null,
-
-      // Tenant information
       is_create_tenant: true,
       tenant_id: null,
       name: '',
@@ -108,21 +104,17 @@ export default {
       email: '',
       identity_card_number: '',
       selectedTenantInfo: null,
-
-      // Contract details
-      pay_period: 3, // Default: 3 months
+      pay_period: 3,
       price: 0,
-      electricity_pay_type: 1, // Default: per person
+      electricity_pay_type: 1,
       electricity_price: 0,
       electricity_number_start: 0,
-      water_pay_type: 1, // Default: per person
+      water_pay_type: 1,
       water_price: 0,
       water_number_start: 0,
       number_of_tenant_current: 1,
       note: '',
-
-      // Dates
-      start_date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+      start_date: new Date().toISOString().split('T')[0],
       end_date: ''
     });
 
@@ -151,10 +143,13 @@ export default {
               return false;
             }
           } else {
-            if (!formData.tenant_id) {
+            if (!formData.tenant_id || isNaN(parseInt(formData.tenant_id))) {
               errorMessage.value = 'Vui lòng chọn người thuê';
               return false;
             }
+
+            // Ensure tenant_id is a number
+            formData.tenant_id = parseInt(formData.tenant_id, 10);
           }
           return true;
         }
@@ -212,32 +207,54 @@ export default {
       try {
         loading.value = true;
         errorMessage.value = '';
+        const dataToSubmit = { ...formData };
+        console.log('Form data before processing:', dataToSubmit);
+        if (!dataToSubmit.is_create_tenant) {
+          delete dataToSubmit.name;
+          delete dataToSubmit.tel;
+          delete dataToSubmit.email;
+          delete dataToSubmit.identity_card_number;
+          if (!dataToSubmit.tenant_id || isNaN(parseInt(dataToSubmit.tenant_id))) {
+            throw new Error('Please select a valid tenant');
+          }
+          dataToSubmit.tenant_id = parseInt(dataToSubmit.tenant_id, 10);
+        } else {
+          delete dataToSubmit.tenant_id;
+          if (!dataToSubmit.name || !dataToSubmit.tel || !dataToSubmit.email || !dataToSubmit.identity_card_number) {
+            throw new Error('Please fill in all tenant information');
+          }
+        }
+        delete dataToSubmit.selectedRoom;
+        delete dataToSubmit.selectedTenantInfo;
+
+        console.log('Submitting contract data:', dataToSubmit);
 
         let response;
         if (USE_MOCK_DATA) {
-          response = await mockApi.createContract(formData);
+          response = await mockApi.createContract(dataToSubmit);
         } else {
-          response = await axios.post('/api/v1/contracts', formData);
+          response = await axios.post('/api/v1/contracts', dataToSubmit);
         }
 
-        // Show success alert for testing purposes
         alert('Hợp đồng đã được tạo thành công!');
         console.log('Contract created successfully:', response.data.data);
 
-        // Reset form after successful submission
         resetForm();
 
       } catch (error) {
         console.error('Error submitting contract:', error);
 
         if (error.response && error.response.data) {
+          console.log('Server response data:', error.response.data);
+
           if (error.response.data.errors) {
-            // Format validation errors
             const errorMessages = Object.values(error.response.data.errors).flat();
             errorMessage.value = errorMessages.join(', ');
           } else {
             errorMessage.value = error.response.data.message || 'Đã xảy ra lỗi khi tạo hợp đồng';
           }
+        } else if (error.message) {
+          errorMessage.value = error.message;
         } else {
           errorMessage.value = 'Đã xảy ra lỗi khi tạo hợp đồng';
         }
@@ -247,7 +264,6 @@ export default {
     };
 
     const resetForm = () => {
-      // Reset form values
       Object.keys(formData).forEach(key => {
         if (key === 'is_create_tenant') {
           formData[key] = true;

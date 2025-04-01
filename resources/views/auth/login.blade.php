@@ -8,7 +8,7 @@
                 Sign in to your account
             </h2>
         </div>
-        <form class="mt-8 space-y-6" action="{{ route('login') }}" method="POST">
+        <form class="mt-8 space-y-6" action="{{ route('login') }}" method="POST" id="loginForm">
             @csrf
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
@@ -66,4 +66,45 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we just logged in (possible redirect from successful login)
+    if (document.referrer.includes('login') && !localStorage.getItem('auth_token')) {
+        console.log('Login detected, requesting API token...');
+        // Get an API token for the authenticated user
+        fetch('/api/auth/get-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('Token response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Failed to get token: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.data && data.data.token) {
+                localStorage.setItem('auth_token', data.data.token);
+                console.log('API token stored successfully');
+                // Only refresh if we're not already on the dashboard
+                if (!window.location.pathname.includes('dashboard')) {
+                    window.location.href = '/dashboard';
+                }
+            } else {
+                console.error('Invalid token response format:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error getting API token:', error);
+        });
+    }
+});
+</script>
 @endsection

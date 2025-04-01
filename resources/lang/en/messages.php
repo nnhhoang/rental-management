@@ -48,6 +48,10 @@ return [
         'no_permission' => 'You do not have permission to access this contract',
         'active_contract_exists' => 'Room already has an active contract',
         'no_active_contract' => 'No active contract found for this room',
+        'date_conflict' => 'The contract dates conflict with an existing contract from :start_date to :end_date',
+        'date_not_available' => 'The contract start date is not available. There is an existing contract ending on :end_date',
+        'creation_failed' => 'Failed to create contract',
+        'has_fee_collections' => 'Cannot delete contract with associated fee collections',
     ],
 
     'fee' => [

@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div v-if="formData.selectedRoom" class="mt-6 p-4 bg-blue-50 rounded-md">
+    <div v-if="formData.selectedRoom && formData.selectedRoom.apartment" class="mt-6 p-4 bg-blue-50 rounded-md">
       <h3 class="font-medium text-blue-800">{{ $t('room.selected_room') }}</h3>
       <p><span class="font-medium">{{ $t('apartment.name') }}:</span> {{ formData.selectedRoom.apartment.name }}</p>
       <p><span class="font-medium">{{ $t('room.room_number') }}:</span> {{ formData.selectedRoom.room_number }}</p>
@@ -73,6 +73,15 @@ export default {
     // Load user's apartments
     const loadApartments = async () => {
       try {
+        // Check for authentication token first
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          console.error('Authentication token not found');
+          alert('You need to log in to access this feature');
+          window.location.href = '/login';
+          return;
+        }
+
         loadingApartments.value = true;
 
         let response;
@@ -85,12 +94,19 @@ export default {
         apartments.value = response.data.data;
 
         // If formData already has a selected room, set the selectedApartmentId
-        if (props.formData.selectedRoom) {
+        if (props.formData.selectedRoom && props.formData.selectedRoom.apartment) {
           selectedApartmentId.value = props.formData.selectedRoom.apartment.id;
           await loadRooms();
         }
       } catch (error) {
         console.error('Error loading apartments:', error);
+        // Specific handling for authentication errors
+        if (error.response && error.response.status === 401) {
+          // Clear invalid token
+          localStorage.removeItem('auth_token');
+          alert('Your session has expired. Please log in again.');
+          window.location.href = '/login';
+        }
       } finally {
         loadingApartments.value = false;
       }
@@ -121,9 +137,26 @@ export default {
           });
         }
 
-        availableRooms.value = response.data.data;
+        // Find the current apartment to attach to each room
+        const currentApartment = apartments.value.find(apt => apt.id === selectedApartmentId.value);
+        
+        // Ensure each room has an apartment property
+        if (currentApartment) {
+          availableRooms.value = response.data.data.map(room => ({
+            ...room,
+            apartment: room.apartment || currentApartment
+          }));
+        } else {
+          availableRooms.value = response.data.data;
+        }
       } catch (error) {
         console.error('Error loading rooms:', error);
+        // Handle authentication errors
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('auth_token');
+          alert('Your session has expired. Please log in again.');
+          window.location.href = '/login';
+        }
       } finally {
         loadingRooms.value = false;
       }
@@ -131,6 +164,16 @@ export default {
 
     // Select a room
     const selectRoom = (room) => {
+      // Make sure the room has all required properties before setting it
+      if (!room.apartment && selectedApartmentId.value) {
+        // Find the apartment by ID
+        const apartment = apartments.value.find(apt => apt.id === selectedApartmentId.value);
+        if (apartment) {
+          // Attach apartment to room
+          room.apartment = apartment;
+        }
+      }
+
       emit('update', 'apartment_room_id', room.id);
       emit('update', 'selectedRoom', room);
 
@@ -148,6 +191,26 @@ export default {
       }).format(value);
     };
 
+    // Validate form data to ensure all required properties exist
+    const validateFormData = () => {
+      if (props.formData.selectedRoom) {
+        // Check if the apartment property exists
+        if (!props.formData.selectedRoom.apartment) {
+          console.warn('Selected room missing apartment, attempting to fix...');
+          
+          // Try to find the apartment from selectedApartmentId
+          if (selectedApartmentId.value) {
+            const apartment = apartments.value.find(apt => apt.id === selectedApartmentId.value);
+            if (apartment) {
+              // Create a new object with the apartment
+              const updatedRoom = { ...props.formData.selectedRoom, apartment };
+              emit('update', 'selectedRoom', updatedRoom);
+            }
+          }
+        }
+      }
+    };
+
     // Watch for apartment change
     watch(selectedApartmentId, () => {
       // Reset room selection when apartment changes
@@ -156,8 +219,12 @@ export default {
       loadRooms();
     });
 
+    // Watch for formData changes to validate
+    watch(() => props.formData, validateFormData, { deep: true });
+
     onMounted(() => {
       loadApartments();
+      validateFormData();
     });
 
     return {

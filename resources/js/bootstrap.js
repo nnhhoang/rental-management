@@ -9,18 +9,24 @@ window.axios.interceptors.request.use(config => {
     }
     return config;
 });
-// axios.interceptors.response.use(
-//     response => response,
-//     error => {
-//         if (error.response && [401, 419].includes(error.response.status)) {
-//             alert('Your session has expired. Please log in again.');
-//             window.location.href = '/login';
-//         }
+window.axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && [401, 419].includes(error.response.status)) {
+            console.error('Authentication error:', error.response.status);
+            // Clear the invalid token
+            localStorage.removeItem('auth_token');
+            // Show alert only if not on login page to avoid redirect loops
+            if (!window.location.pathname.includes('/login')) {
+                alert('Your session has expired. Please log in again.');
+                window.location.href = '/login';
+            }
+        }
 
-//         if (error.response && error.response.status === 422) {
-//             console.error('Validation error:', error.response.data.errors);
-//         }
+        if (error.response && error.response.status === 422) {
+            console.error('Validation error:', error.response.data.errors);
+        }
         
-//         return Promise.reject(error);
-//     }
-// );
+        return Promise.reject(error);
+    }
+);
